@@ -1,33 +1,33 @@
-# Digital Design Using Vivado IPI
+# Thiết kế điện tử số sử dụng Vivado IPI
 
-XUP has developed a basic functional IP blocks [library](./sources/XUP_LIB) which can be used to create digital designs in a schematic view. The tutorial and laboratory exercises are created and available targeting RealDigital Boolean and TUL PYNQ-Z2 boards, however, they can be used with any of the XUP supported boards. The laboratory material is targeted for use in a introductory Digital Design course where professors want to introduce FPGA technology in the course to validate the learned principles through creating designs using Vivado.
+Chương trình hỗ trợ đại học của Xilinx (XUP) đã phát triển [thư viện](./sources/XUP_LIB) các khối IP chức năng cơ bản có thể được dùng để tạo ra các thiết kế số bằng cách vẽ mạch điện (schematic). Các bài tập hướng dẫn (tutorial) và bài tập thực hành hướng đến các hàm lô-gic số (Digital Boolean) thực tế và bo mạch TUL PYNQ-Z2, tuy nhiên, chúng có thể được dùng với bất kỳ bo mạch nào được hỗ trợ bởi Chương trình hỗ trợ đại học của Xilinx (XUP). Tài liệu cho bài thực hành hướng đến việc sử dụng trong khóa học giới thiệu về Thiết kế Số trong đó giảng viên giới thiệu công nghệ FPGA trong khóa học để kiểm chứng các nguyên lý đã học qua việc tạo ra các thiết kế dùng Vivado.
 
-The tutorial is developed to get the users (students) introduced to the digital design flow in Xilinx field programmable devices using Vivado IP Integrator (IPI).  The guide - How to create your own IPI block - guides you through the procedure of creating a custom IPI block and then use it in your next design.
+Bài hướng dẫn được phát triển để người dùng (sinh viên) làm quen với quy trình thiết kế số trong các thiết bị khả trình của Xilinx sử dụng Bộ tích hợp IP (IPI) trong Vivado. Bài hướng dẫn "Cách tự tạo mới một khối IPI" hướng dẫn các bạn các bước để tạo tạo ra một khối IPI tùy chỉnh và sau đó sử dụng nó trong các thiết kế tiếp theo.
 
-In this tutorial, we will be using Vivado 2021.2 running on Windows 10.
+Trong bài thực hành này, chúng ta sẽ sử dụng Vivado phiên bản 2021.2 chạy trên windows 10.
 
-## Supported Boards Material
+## Tài liệu của các bo mạch được hỗ trợ
 
-| Material Type                  | Link                                                         |
+| Loại tài liệu                  | Link                                                         |
 | ------------------------------ | ------------------------------------------------------------ |
-| Boolean Board Master XDC File  | [Boolean.xdc](https://www.realdigital.org/downloads/8d5c167add28c014173edcf51db78bb9.txt) |
-| Boolean Board Schematic        | [Schematic](https://www.realdigital.org/downloads/63f9a8205ebd9c2e8c2d265ad25097dc.pdf) |
-| Boolean Board Reference Manual | [Reference Manual](https://www.realdigital.org/doc/02013cd17602c8af749f00561f88ae21) |
-| PYNQ-Z2 Master XDC File        | [PYNQ-Z2 Master XDC](https://dpoauwgwqsy2x.cloudfront.net/Download/pynq-z2_v1.0.xdc.zip) |
-| PYNQ-Z2 Schematic              | [Schematics (PDF)](https://dpoauwgwqsy2x.cloudfront.net/Download/TUL_PYNQ_Schematic_R12.pdf) |
-| PYNQ-Z2 Reference Manual       | [PYNQ-Z2 User Manual (PDF)](https://dpoauwgwqsy2x.cloudfront.net/Download/pynqz2_user_manual_v1_0.pdf) |
+| Tập tin Boolean Board Master XDC  | [Boolean.xdc](https://www.realdigital.org/downloads/8d5c167add28c014173edcf51db78bb9.txt) |
+| Bản vẽ mạch Boolean        | [Schematic](https://www.realdigital.org/downloads/63f9a8205ebd9c2e8c2d265ad25097dc.pdf) |
+| Tài liệu tham chiếu Boolean Board | [Reference Manual](https://www.realdigital.org/doc/02013cd17602c8af749f00561f88ae21) |
+| Tập tin PYNQ-Z2 Master XDC     | [PYNQ-Z2 Master XDC](https://dpoauwgwqsy2x.cloudfront.net/Download/pynq-z2_v1.0.xdc.zip) |
+| Bản vẽ mạch điện PYNQ-Z2       | [Schematics (PDF)](https://dpoauwgwqsy2x.cloudfront.net/Download/TUL_PYNQ_Schematic_R12.pdf) |
+| Hướng dẫn sử dụng PYNQ-Z2      | [PYNQ-Z2 User Manual (PDF)](https://dpoauwgwqsy2x.cloudfront.net/Download/pynqz2_user_manual_v1_0.pdf) |
 | XUP LIB                        | [Library Components List.pdf](https://www.xilinx.com/content/dam/xilinx/support/documentation/university/Vivado-Teaching/Digital-Design/2014x/docs-pdf/Library_Components_List.pdf) \| [Libarary File](./sources/XUP_LIB) |
 
-## Labs Material
+## Tài liệu của các bài thực hành
 
-| Title                                 | Source                                                   |
-| ------------------------------------- | -------------------------------------------------------- |
-| Vivado Tutorial using XUP IPI Library | [sources](./sources/Vivado_Tutorial_Using_IP_Integrator) |
-| Create your own IPI block             | [sources](./sources/Vivado_Tutorial_Using_IP_Integrator)                                              |
+| Tiêu đề                                         | Mã nguồn                                                   |
+|-------------------------------------------------|----------------------------------------------------------|
+| Hướng dẫn sử dụng thư viện XUP IPI trong Vivado | [sources](./sources/Vivado_Tutorial_Using_IP_Integrator) |
+| Tự tạo mới một khối IPI                         | [sources](./sources/Vivado_Tutorial_Using_IP_Integrator) |
 
-**Note**: This tutorial is under construction
+**Chú ý**: Bài hướng dẫn này đang được hoàn thiện.
 
 
 
 ------------------------------------------------------
-<p align="center">Copyright&copy; 2022, Advanced Micro Devices, Inc.</p>
+<p align="center">Bản quyền&copy; 2022, Tập đoàn Advanced Micro Devices.</p>
