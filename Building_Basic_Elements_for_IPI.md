@@ -1,411 +1,369 @@
-# Buidling Basic Elements for IPI
+# Xây dựng thành phần cơ bản cho IPI
 
-## Introduction
+## Giới thiệu
+Phần hướng dẫn này sẽ giúp bạn tạo ra các thành phần cơ bản có thể được sử dụng trong khoá học thiết kế số. Các bước này có thể được sử dụng sang việc tạo IP một mức độ khó hơn.
+<!-- **IP** trong *Xilinx*, *Vivado* là viết tắt của **Intellectual Property** (tài sản trí tuệ), là các lõi thiết kế được cung cấp bởi *Xilinx* hoặc các bên thứ ba để hỗ trợ cho quá trình thiết kế FPGA. -->
+<!-- **IP** có thể bao gồm logic, các vi xử lý nhúng, các module xử lý tín hiệu số DSP, hoặc các thiết kế thuật toán DSP dựa trên C. **IP** khác nhau có thể được nhanh chóng cấu hình và được kết nối với nhau thành các thiết kế khối hệ thống phụ **IP** trong môi trường **IP** integrator của *Vivado*. -->
 
-This tutorial guides you through creating basic elements which can be used in basic digital design course. The steps can be used to extend it to creating IP of any complexity.
+## Mục tiêu
+Sau khi hoàn thành khoá học bạn có thể:
+  - Sử dụng chức năng *Create and Package IP* trong Vivado để tạo IP
+  - Giả lập và xác định IP
+  - Tạo bitstream và xác định chức năng của phần cứng 
 
-## Objectives
+## Các bước 
 
-After completing this tutorial, you will be able to:
+Bài hướng dẫn này được chia thành các bước bao gồm các câu tổng quan chung cung cấp thông tin về các hướng dẫn chi tiết theo sau. Hãy làm theo các hướng dẫn chi tiết này để tiến bộ qua bài hướng dẫn.
 
-- Use Create and Package IP feature of Vivado to create IP
+Bài hướng dẫn này bao gồm 4 bước chính: Bạn sẽ tạo hai IP tùy chỉnh trong Vivado, tạo một dự án khác để sử dụng các IP đã tạo, mô phỏng thiết kế và xác minh chức năng trong phần cứng.
 
-- Simulate and verify IP functionality
+## Tổng quan hướng dẫn 
 
-- Generate the bitstream and verify the functionality in hardware
+Đường dẫn cho mã nguồn chỉ nên chứa các ký tự không dấu. Độ dài đường dẫn tối đa được hỗ trợ cho Windows là 260 ký tự.
 
-## Procedure
+**{SOURCES}** là đường dẫn *C:\digital_design_tutorial\source\create_your_own_IPI_block*. Bạn có thể tải các tệp nguồn cho các bài hướng dẫn từ thư mục nguồn đã sao chép.
 
-This tutorial is separated into steps that consist of general overview statements that provide information on the detailed instructions that follow. Follow these detailed instructions to progress through the tutorial.
+**{TUTORIAL}** là đường dẫn *C:\digital_design_tutorial*.
 
-This tutorial comprises 4 primary steps: You will create two custom IPs in Vivado, create another project to use the created IPs, simulate the design, and verify the functionality in the hardware.
+## Bước 1: Tạo một Project cho để Tạo IP trong Vivado
 
-##  In the instructions for the tutorial
+### Tạo một project trong Vivado với tên xup_and2 theo đường dẫn {SOURCES} sử dụng file xup_and2.v có sẵn và mặc định thiết bị sử dụng là dòng Spartan-7 hoặc Zynq-7000
 
-The absolute path for the source code should only contain ascii characters. Deep path should also be avoided since the maximum supporting length of path for Windows is 260 characters.
+1. Mở Vivado 2021.2
+2. Ấn chọn *Create New Project*.
+3. Ấn **Next**, và đặt tên cho project **xup_and2** và chọn đường dẫn **{SOURCES}**, và ấn **OK**.
+4. Ấn **Next** và đảm bảo rằng *RLT Project* được chọn.
+5. Ấn **Next**, ta chọn *Target language* và *Simulation language* là **Verilog**. Bấm *Add Files*, chọn đường dẫn **{SOURCES}** và chọn file **xup_and2.v**,  ấn tick *Copy sources into project* rồi bấm **OK**.
+6. Ấn **Next** hai lần cho đến khi *Add Constrains* form xuất hiện.
+7. Xoá bất cứ file constraint tồn tại, tiếp tục ấn** Next** đến khi ra *Default Part* form.
+8. Ấn **Next** và chọn **Part** là các thiết bị thuộc dòng Spartan-7 or Zynq-7000 và cuối cùng bấm **Finish**.
+9. Ấn *Run Symthesis* trên thanh *Flow Navivator* phía bên trái cửa sổ mặc định. (Bước này không bắt buộc nhưng khuyến nghị để đảm bảo rằng thiết kế có thể tổng hợp được).
+10. Ấn **Cancel** khi quá trình *Run Symthesis* đã hoàn thành trên cửa sổ thông báo xuất hiện. Đảm bảo rằng không có lỗi nào.
+11. Tại tab *Design Runs*, ấn chuột phải vào *synth_1* và ấn chọn  **Reset Runs**. 
 
-**{SOURCES}** refers to *\\digital_design_tutorial\\source\\create_your_own_IPI_block*. You can download the source files for the tutorials from the cloned sources directory
-
-**{TUTORIAL}** refers to *C:\digital_design_tutorial\\*. It assumes that you will create the mentioned directory structure to carry out the tutorials of this workshop
-
-## Step 1 Create a Project for Creating IP in Vivado
-
-### Create a Vivado project calling it as xup_and2 in the {SOURCES} directory using the provided xup_and2.v source file targeting the default Spartan-7 or Zynq-7000 family device.  Synthesize the design.
-
-1. Open Vivado 2021.2
-
-2. Click the *Create New Project* link.
-
-3. Click **Next**, and name the project **xup_and2** in the **{TUTORIAL}** directory.
-
-4. Click **Next** and make sure that *RTL Project* is selected.
-
-5. Click **Next** and make sure that **Verilog** is selected as the *Target language* and *Simulation language*. Click *Add Files*, browse to ***{SOURCES}*** and select **xup_and2.v**, and click **OK**.
-
-6. Click **Next** two times until *Add Constraints* form is displayed*.*
-
-7. Remove any constraint files listed, if any, and click **Next** to see the *Default Part* form.
-
-8. Click **Next** with the Spartan-7 or Zynq-7000 part selected and then **Finish**.
-
-9. Click *Run Synthesis* in the *Flow Navigator* pane. (This step is optional but recommended to make sure that the design is synthesizable).
-
-10. Click **Cancel** when the process is completed and the dialog box is presented. Make sure no errors are reported.
-
-11. In the *Design Runs* tab, right click on the *synth_1* and select **Reset Runs**.
-
-### Set the library name and category if desired. Here you will use XUP as the library name and XUP_LIB as the category. You can change Vendor name if necessary.
-
-1. Click *Settings* in the *Flow Navigator* pane.
-2. Expand *IP* in the left pane.
-3. Click on the *Packager* tab.
-4. Change the necessary fields as shown below and click **OK**.
+## Đặt tên cho thư viện (Library) và danh mục (Category). Dưới đây bạn sẽ sử dụng tên thư viện (Library) là XUP và tên danh mục (Category)là XUP_LIB. Bạn có thể thay đổi tên Vendor nếu cần thiết.
+1. Ấn *Settings* ở thanh *Flow Navigator* (trên cùng phía bên trái màn hình).
+2. Mở rộng mục IP ở thanh bên trái.
+3. Ấn vào tab *Packager*.
+4. Thay đổi các trường thông tin cần thiết như ảnh dưới rồi ấn **OK**.
 
 ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig1.png)
 
-Setting up the Library and Category fields
+Thiết lập trường Libray và Category
 
-### Package the IP
-
-1. Select **Tools > Create and Package New IP**
-
-2. Click **Next**.
-
-3. With the *Package your current project* option selected, click **Next** twice and click **Finish**.
-
-   The summary form will be displayed showing various components and files used in creating the IP as it stands at the moment. We will customize some of the components. Click **OK**.
-
-   The **Package IP – xup_and2** tab will be opened showing the default values and the available options.
+## Đóng gói IP (Package the IP)
+1. Chọn **Tools** > **Creat And Package New IP**
+2. Ấn **Next**.
+3. Với tuỳ chọn *Package your current project* được chọn, ấn **Next** hai lần rồi **Finish**.
+Chúng ta sẽ tùy chỉnh một số thành phần ở form như hình dưới. Bấm vào **OK**.
+Tab **Package IP – xup_and2** sẽ được mở với các giá trị mặc định và tùy chọn có sẵn.
 
 ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig2.png)
 
-The IP Identification default values
+Các giá trị mặc định của IP Identification
 
-4. Make necessary changes to the IP *Identification* fields as shown.
+4. Thực hiện những thay đổi cần thiết đối với trường *Identification* của Package IP như ảnh dưới
 
 ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig3.png)
 
-The IP Identification customized fields
+Các trường thông tin tùy biến của IP Indentification
 
-5. Select IP *Compatibility*. This shows the different Xilinx FPGA Families that the IP can be used in.
-6. Select *Package for IPI* option.
-   You can change the **Life-Cycle** to other options then *Beta*
-7. Click on IP *File Groups* and expand the sub-folders to see its content. You can add additional files, like testbench, but we won’t do that here.
+5. Chọn *Compatibility*. Điều này cho thấy các dòng FPGA Xilinx khác nhau mà IP có thể được sử dụng.
+6. Chọn tuỳ chọn *Package for IPI*. Bạn có thể thay đổi **Life-Cycle** sang các tuỳ chọn khác sau đó là Beta
+7. Ấn *File Groups* và mở rộng các folders con để có thể xem nội dung trong đó. Bạn có thể thêm additional files, giống như testbench, nhưng ta không thực hiện nó trong bước này.
 
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig4.png" width="80%" height="80%"/>
+</p>
+<p align = "center">
+   <i>File Groups trong <strong>Package IP – xup_and2</strong></i>
+</p>
 
-![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig4.png)Updating IP File Groups
+## Chỉnh sửa IP Customization Parameter với giá trị mặc định mong muốn và loại giá trị được phép
+1. Nhấp vào *Customization Parameters* của **Package IP – xup_and2** và đảm bảo tham số DELAY nằm trong đó vì nó được xác định từ các bước trước.
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig5.png" width="80%" height="80%"/>
+</p>
+<p align = "center">
+   <i>Customization Parameters trong <strong>Package IP – xup_and2</strong></i>
+</p>
 
-### Edit IP Customization Parameter with the desired default value and type of values allowed
+2. Nhấp chuột phải vào mục DELAY trong *User Parameters* và chọn **Edit Parameter…**
 
-1. Click on the IP *Customization Parameters* and verify that DELAY parameter is included since it is defined in the source file.
+   Form được hiển thị như sau
 
-![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig5.png)
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig6.png" width="80%" height="80%"/>
+</p>
+<p align = "center">
+   <i>Thuộc tính của tham số</i>
+</p>
 
-2. Right-click on the *DELAY* entry under the *User Parameters*, and select **Edit Parameter…**
+   Bạn có thể cố định tham số bằng cách chọn No trong trường Editable. Định dạng dữ liệu có thể long, float, bitstring và string. Bạn có thể thay đổi giá trị mặc định (được chọn từ mô hình) thành một giá trị khác. Giá trị có thể được giới hạn trong danh sách các giá trị (List of values) hoặc thậm chí là một phạm vi (Range of values). Dưới đây là ví dụ về danh sách tùy chọn giá trị:
 
-   The form will be displayed
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig7.png" width="80%" height="80%"/>
+</p>
+<p align = "center">
+   <i>Sửa đổi kiểu giá trị của Delay</i>
+</p>
 
-   ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig6.png)
+   Cách bạn chọn Type sẽ ảnh hưởng tới cách bạn chọn các giá trị. Ở đây mình chọn Type là List of values:
 
-   You can make the parameter fixed by selecting **No** in the *Editable* field. The data format can be long, float, bitstring, and string. You can change the default value (which is picked up from the model) to a different value. The value can be restricted to a list of values (with check-boxes) or even a range. Here is an example of the list of values option:
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig8.png" width="80%" height="80%"/>
+</p>
 
-   ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig7.png)
+Còn dưới đây, bạn chọn Type là Range of intergers:
 
-   which will result in following GUI when a user tries to configure in a design:
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig9.png" width="80%" height="80%"/>
+</p>
 
-   ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig8.png)
-
-Here is an example of the range:
-
-![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig9.png)
-
-which will show up in the design as
+sẽ được hiển thị trong thiết kế như sau
 
 ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig10.png)
 
-3. Set the parameters editing to *range of integers* and set the range as **0** to **5**. Click **OK**.
+3. Chỉnh sửa tham số thành *Range of integers* và đặt phạm vi trong đoạn [0;5]. Ấn chọn **OK**.
+4. Ấn vào *Ports and Interfaces* của Package IP và xác định rằng các cổng đã ở trong đó.
+5. Ấn vào *Customization GUI* và bấm chọn **Refresh** để thấy được GUI.
 
-4. Click on the IP *Ports and Interfaces* and verify that the top-level ports are included.
+   Chú ý rằng cổng input/output cũng như các tham số có giá trị mặc định được hiển thị.
+<p align="center">
+  <img src ="img/Building_Basic_Elements_for_IPI/fig11.png" width="80%" height="80%"/>
+</p>
 
-5. Click on the IP *GUI Customization Layout* and then click on the *Refresh* button to see the GUI.
+Giao diện cấu hình IP
 
-   Notice that the input/output ports as well as the parameter with the default value are displayed.
+6. Chọn *Review and Package* và ấn **Package IP**.
+7. Ấn **OK**.
+8. Trên cửa sổ Vivado ấn **File** > **Close Project**.
 
-   ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig11.png)
+## Tạo một project trong Vivado với tên xup_and_vector trong đường dẫn {SOURCES} sử dụng file xup_and_vector.v được cung cấp sẵn và mặc định thiết bị sử dụng là dòng vi điều khiển Spartan-7 hoặc Zynq-7000.
 
-The IP GUI Customization
+1. Mở Vivado. 
+2. Ấn chọn *Create New Project*. 
+3. Ấn **Next**, và đặt tên cho project **xup_and_vector** và chọn đường dẫn **{SOURCES}**, và ấn **OK**.
+4. Ấn **Next** và đảm bảo rằng *RLT Project* được chọn.
+5. Ấn **Next**, ta chọn *Target language* và *Simulation language* là **Verilog**. Bấm *Add Files*, chọn đường dẫn **{SOURCES}** và chọn file **xup_and_vector.v**, ấn tick *Copy sources into project* rồi bấm **OK**.
+6. Ấn **Next** hai lần cho đến khi *Add Constrains* form xuất hiện.
+7. Xoá bất cứ file constraint tồn tại, tiếp tục ấn **Next** đến khi ra *Default Part* form.
+8. Ấn **Next** và chọn **Part** là các thiết bị thuộc dòng Spartan-7 or Zynq-7000 và cuối cùng bấm **Finish**.
 
-6. Select *Review and Package*, and click on the **Package IP** button.
-7. Click **OK**.
-8. In the Vivado window click **File > Close Project.**
+## Đặt tên cho thư viện (Library) và danh mục (Category). Dưới đây bạn sẽ sử dụng tên thư viện (Library) là XUP và tên danh mục (Category)là XUP_LIB. Bạn có thể thay đổi tên Vendor nếu cần thiết.
 
-### Create a Vivado project calling it as xup_and_vector in the {SOURCES} directory using the provided xup_and_vector.v source file targeting the default Spartan-7 or Zynq-7000 family device.  
+1. Ấn *Settings* ở thanh *Flow Navigator* (trên cùng phía bên trái màn hình).
+2. Mở rộng mục IP ở thanh bên trái.
+3. Ấn vào tab *Packager*. 
+4. Thay đổi các trường thông tin cần thiết như ảnh dưới rồi ấn **OK**.
 
-1.   Open Vivado if it was closed.
-2.   Click the *Create New Project* link.
-3.   Click **Next**, and name the project **xup_and_vector** in the **{SOURCES}** directory.
-4.   Click **Next** and make sure that *RTL Project* is selected.
-5.   Click **Next** and make sure that **Verilog** is selected as the *Target language* and *Simulation language*. Click *Add Files*, browse to **{SOURCES}** and select **xup_and_vector.v**, and click **OK**.
-6.   Click **Next** two times until *Add Constraints* form is displayed.
-7.   Remove any constraint files listed, if any, and click **Next** to see the *Default Part* form.
-8.   Click **Next** with the Spartan-7 or Zynq-7000 part selected and then **Finish**.
+## Đóng gói IP (Package the IP)
 
-### Set the library name and category if desired. Here you will use XUP as the library name and XUP_LIB as the category. You can change Vendor name if necessary.
+1. Chọn *Tools* > **Create And Package New IP**.
+2. Chọn *Package your current project*, ấn **Next**.
+3. Chọn *Package your project*, ấn *Next*, rồi sau đó **Finish**.
 
-1.   Click *Settings* in the *Flow Navigator* pane.
+   Biểu mẫu tóm tắt hiển thị  các thành phần và tệp khác nhau được sử dụng để tạo IP như hiện tại. Chúng tôi sẽ tùy chỉnh một số thành phần. Bấm vào **OK**.
 
-2.   Expand *IP* in the left pane.
+   Tab **Package IP – xup_and_vector** sẽ được mở với các giá trị mặc định và các tùy chọn có sẵn.
 
-3.   Click on the *Packager* tab.
-
-4.   Change the necessary fields and click **OK**.
-
-### Package the IP.
-
-1. Select **Tools > Create and IP Package**.
-
-2. select **Package your current project**, click **Next**.
-
-3. With the *Package your project* option selected, click **Next,** and then click **Finish**.
-
-   The summary form will be displayed showing various components and files used in creating the IP as it stands at the moment. We will customize some of the components. Click **OK**.
-
-   The **Package IP – xup_and_vector** tab will be opened showing the default values and the available options.
-
-4.   Make necessary changes to the IP *Identification* fields as shown.
+4. Thực hiện những thay đổi cần thiết đối với trường *Identification* của **Package IP – xup_and_vector** như ảnh dưới
 
 ![image-20220120112544771](img/Building_Basic_Elements_for_IPI/fig12.png)
 
-The IP Identification customized fields
+Các thông tin tùy biến trong IP Identification
 
-5. Select IP *Compatibility*. This shows the different Xilinx FPGA Families that the IP supports. The value is inherited from the device selected for the project.
+5. Chọn *Compatibility*. Điều này cho thấy các dòng FPGA Xilinx khác nhau mà IP có thể được sử dụng.
 
-5. Select IP *Compatibility*. This shows the different Xilinx FPGA Families that the IP can be used in.
-6. Select *Package for IPI* option.
-   You can change the **Life-Cycle** to other options then *Beta*
-7. Click on IP *File Groups* and expand the sub-folders to see its content. You can add additional files, like testbench, but we won’t do that here.
+6. Chọn tuỳ chọn P*ackage for IPI*.
+   Bạn có thể thay đổi **Life-Cycle** sang các tuỳ chọn khác sau đó là Beta.
+7. Ấn *File Groups* và mở rộng các folder để có thể xem nội dung trong đó. Bạn có thể thêm *additional files*, giống như testbench, nhưng ta không thực hiện nó trong bước này.
 
-### Edit IP Customization Parameter with the desired default value and type of values allowed
+## Chỉnh sửa IP Customization Parameter với giá trị mặc định mong muốn và loại giá trị được phép
 
-1.   Click on the IP *Customization Parameters* and verify that DELAY and SIZE parameters are included.
+1. Nhấp vào **Customization Parameters** của **Package IP – xup_and_vector** và đảm bảo rằng tham số DELAY và SIZE nằm trong đó vì nó được thêm từ bước trước đó.
+2. Nhấp chuột phải vào mục DELAY trong *User Parameters* và chọn **Edit Parameter…**
+3. Đặt *Type* sang Range of integers và đặt chúng ở giá trị trong đoạn từ **0** đến **5**. Ấn **OK**.
+4. Tương tự, với SIZE ta cũng thay đổi *Type* sang Range of integers và chỉnh giá trị trong đoạn từ **1** đến **8**. Bấm nút **OK**
+5. Ấn *Ports and Interfaces* và chắc chắn các cổng đầy đủ ở đó.
+6. Ấn *GUI Customization*, sau đó ấn **Refresh** để có thể thấy GUI.
 
-2.   Right-click on the *DELAY* entry under the *User Parameters*, and select **Edit Parameters…**
-
-The form will be displayed
-
-3. Set the parameters editing to *range of integers* and set the range as **0** to **5**. Click **OK**.
-
-4. Similarly, set the SIZE entry parameters to *range of integers* and set the range as **1** to **8**. Click **OK**
-
-5. Click on the IP *Ports and Interfaces* and verify that the top-level ports are included.
-
-6. Click on the IP *GUI Customization Layout* and then click on the *Refresh* button to see the GUI.
-
-   Notice that the input/output ports as well as the parameter with the default value are displayed.
+Chú ý rằng các cổng input/output cũng như các tham số được hiển thị với giá trị mặc định
 
    ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig13.png)
 
- 7. Select *Review and Package*, and click on **Package IP.**
+7. Chọn *Review and Package*, và ấn **Package IP**
+8. Trong cửa sổ **Vivado** > **Close Project**.
+9. Ấn **OK**.
 
- 8. In the Vivado window click **File > Close Project.**
+10.  Sử dụng **Windows Explorer**, tạo một folder có tên xup_lib theo đường dẫn **{TUTORIAL}** và copy hai folder **xup_and2** và **xup_and_vector** vào trong forder **xup_lib.** 
 
- 9. Click **OK**.
+##  Bước 2: Tạo một Project test IP 
 
- 10. Using the Windows Explorer, copy the generated xup_and2 and xup_and_vector folders into the xup_lib folder under **{TUTORIAL}** (create the folder if does not exist).
+### Tạo một Project xup_and_test trống trong đường dẫn {SOURCE} với linh kiện được chọn xc7s50csga324-1 (thuộc Boolean) hoặc XC7Z020clg400-1 device (thuộc PYNQ-Z2). Thiết lập IP Repository tới đường dẫn thư mục {TUTORIAL}\xup_lib.
 
-## Step 2 Create a Project for Testing the Created IPs
+1. Ấn *Create New Project*.
+2. Chọn đường dẫn **{TUTORIAL}** và đặt tên cho project là **xup_and_test**.
 
-### Create an empty Vivado project calling it as xup_and_test in the **{SOURCES}** directory targeting the xc7s50csga324-1 device (for Boolean) or XC7Z020clg400-1 device (for PYNQ-Z2).  Setup the IP Repository to point to {TUTORIAL}\xup_lib directory.
+3. Ấn **Next** và đảm bảo rằng *RTL Project* được chọn
 
-1. Click the *Create New Project* link.
+4. Ấn **Next** và thay đổi *Target language* và *Simulation language* là **Verilog**.
 
-2. Set the directory path to **{TUTORIAL}** and the project name as **xup_and_test**.
+5. Ấn **Next** cho đến khi *Default Part* form xuất hiện.
 
-3. Click **Next** and make sure that the *RTL Project* type is selected.
+6. Sử dụng các tuỳ chọn để chọn thiết bị phù hợp, chọn xc7s50csga324-1 (cho Boolean) hoặc XC7Z020clg400-1 device (cho PYNQ-Z2), sau đó bấm nút **Next**, và sau đó **Finish**.
 
-4. Click **Next** and make sure that **Verilog** is selected as the *Target language* and *Simulation language*.
+7. Ấn **Project Settings** trên thanh *Flow Navigator*.
 
-5. Click **Next** until *Default Part* form is displayed*.*
+8. Chọn **IP** ở trong cửa sổ *Flow Navigator* và mở rộng chúng.
 
-6. Using the appropriate filters, select xc7s50csga324-1 device (for Boolean) or XC7Z020clg400-1 device (for PYNQ-Z2), then click **Next**, and then **Finish**.
-
-7. Click **Project Settings** in the *Flow Navigator* pane.
-
-8. Select **IP** in the left pane of the *Project Settings* form.
-
-9. Click on the **Add Repository…** button, browse to **{TUTORIAL}\xup_lib** and click **Select**.
-
-   The directory will be scanned and IP entries will appear in the **Selected Repository** window.
+9. Ấn **Add Repository**..., chọn đường dẫn ***{TUTORIAL}\xup_lib*** và ấn **Select**.
+Đường dẫn sẽ được quét và IP sẽ xuất hiện trong cửa sổ **Selected Respository**.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig14.png)
 
-Specify IP Repository
+Cấu hình kho lưu trữ IP
 
-10. Click **OK**
 
-### Create the block design, called system, instantiating the xup_and2 and setting the delay parameter to 5. Make the ports external.
+10.  Ấn **OK**.
 
-1.   Click on the **Create Block Design** in the *Flow Navigator* pane.
+### Tạo các block design, ta gọi là hệ thống (system), sử dụng thiết kế xup_and2 và sửa tham số DELAY sang 5.
 
-2.   Set the design name to **system** and click **OK**.
-
-3.   IP from the catalog can be added in different ways. Click on *Add IP* in the message at the top of the *Diagram* panel.
-
-4.   Once the IP Catalog is open, type “XUP” into the Search bar, find and double click on **XUP 2-input AND** entry, or click on the entry and hit the *Enter* key to add it to the design.
-
-5.   Double-click on the *xup_and2_0* instance to open the configuration form.
-
-6.   Change the *Delay* value to **5** and click **OK**.
-
-7.   Right-click on the *y* port and select **Make External**.
-
-8.   Similarly, select the *a* and *b* ports and make them external.
-
-9.   The block diagram should look like below.
+1. Ấn *Create Block Design* trên thanh *Flow Navigator*.
+2. Đặt tên cho design (thường thì để luôn tên mặc định *design_1*) rồi ấn **OK**.
+3. IP từ danh mục có thể được thêm vào với nhiều cách khác nhau. Ấn **Add IP** trên màn hình hiển thị của phần **Diagram**. 
+4. Khi danh mục IP được mở, các loại "XUP" trên thanh *Search*, tìm và đúp chuột vào **XUP 2-input AND**.
+5. Đúp chuột vào **xup_and2_0** và mở configuration form.
+6. Thay đổi giá trị Delay sang 5 và ấn *GUI Customization*.
+7. Chuột phải vào cổng y và chọn *Make External*.
+8. Với cổng a và cổng b ta cũng làm tương tự để *Make External*.
+9. Sơ đồ khối (block diagram) nên được đặt như hình dưới.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig15.png)
 
-The block dsign
+Block design
 
-### Instantiate the xup_and_vector. Set the Delay parameter to 2 and the Size to 3. Make the ports external.
+### Sử dụng thiết kế xup_and_vector. Đặt tham số Delay sang 2 và Size sang 3.
 
-1.   Similarly, add an instance of an **XUP n-bit wide AND** to the design.
-
-2.   Double-click on the *xup_and_vector_0* instance to open the configuration form.
-
-3.   Change the *Delay* value to **2** and Size to 3, and click **OK**.
-
-4.   Right-click on the *y* port and select **Make External**.
-
-5.   Similarly, select the *a* and *b* ports and make them external.
-
-6.   The block diagram should look like below.
+1. Tương tự, ta tìm và thêm **XUP n-bit wide AND** vào thiết kế.
+2. Đúp chuột vào **xup_and_vector_0** để mở configuration form.
+3. Chỉnh sửa giá trị Delay sang 2 và Size sang 3, ấn **OK**.
+4. Chuột phải vào cổng y và chọn *Make External*.
+5. Với cổng a và cổng b ta cũng làm tương tự để *Make External*.
+6. Sơ đồ khối (block diagram) nên được đặt như hình dưới.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig16.png)
 
-The block design
+Block design
 
-### Validate the design. Generate the output products and create HDL wrapper.
+### Xác minh thiết kế. Tạo các sản phẩm đầu ra và HDL wrapper
 
-1. Click **Tools > Validate design** and correct any errors if necessary
+1. Ấn **Tools > Validate design** và đảm bảo rằng không có thông báo lỗi nào.
+2. Đúp chuột vào *design_1.bd* trong tab **Sources** và **Generate Out Products**.
 
-2. Right Click on *design_1.bd* in the **Sources** tab and select **Generate Output Products**.
+    Nó sẽ tạo một file nguồn của IP trong thiết kế.
 
-   This will generate the source files of the IP(s) in the design.
+3. Đúp chuột vào *design_1.bd* trong tab **Sources** và ấn **Create HDL Wrapper**.
+4. Chọn **Let Vivado Manage wrapper and auto-update** và ấn **OK**. 
 
-3.   Right Click on *system.bd* in the **Sources** tab and select **Create HDL Wrapper**.
+### Xem mã nguồn (Mô hình của IP)
 
-4.   Select **Let Vivado Manage wrapper and auto-update** option and click **OK** when prompted.
+1. Chọn tab IP Sources và mở rộng chúng ra để xem cái file con liên quan.
 
-### Look at the source file (model of the IP).
-
-1. Select **IP Sources** tab and expand the hierarchy.
-
-   Observe the xup_and2.v entry under the synthesis and simulation categories. In this simple example, it is the same. In complex design, they may be different depending on how the IP was created.
+   Quan sát mục **xup_and2.v** trong các danh mục tổng hợp và mô phỏng. Trong ví dụ đơn giản này, nó cũng giống nhau. Nhưng trong thiết kế phức tạp, chúng có thể khác nhau tùy thuộc vào cách IP được tạo ra.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig17.png)
 
-The IP hierarchy
+Cấu trúc phân cấp của IP
 
-2. Double-click the *xup_and2.v* entry and look at the model used to create the IP and the functionality it is providing.
+2. Đúp chuột vào **xup_and2.v** và xem mô hình bên trong được sử dụng để tạo IP và các chức năng được cung cấp.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig18.png)
 
-The IP Model
+Mô hình của IP
 
-## Step 3 Simulate the Design                     
+## Bước 3: Mô phỏng thiết kế
 
-### Set simulation time to 100 ns.
+### Cài đặt thời gian mô phỏng về 100ns
 
-1. Select *Settings > Simulation Settings* in *flow navigator*
+1. Chọn **Settings** > **Simulaton Settings** trong thanh *Flow Navigator*.
 
-2. In the **Simulation** tab, set the simulation time to **100** ns and click **OK** to close the window.
+2. Trong tab **Simulation**, đặt Simulation time về 100ns và ấn **OK** để đóng cửa sổ.
 
-### Add the provided xup_and_tb.v testbench, simulate and examine the output
+### Thêm file xup_and_tb.v testbench, mô phỏng và kiểm tra output
 
-1. Click *Add Sources.*
-
-2. Select *Add or Create Simulation Sources* and click **Next.**
-
-3. Click *Add Files*, and browse to the **{SOURCES}** directory and select **xup_and_tb.v** and click **Finish.**
-
-4. Expand the hierarchy and notice how the design is setup for the simulation.
+1. Ấn *Add Sources*.
+2. Chọn *Add or Create Simulation Sources* và ấn **OK**.
+3. Đúp chuột vào *Add Files*, và chỉ tới đường dẫn **{SOURCES}** rồi chọn **xup_and_tb.v** sau đó ấn **Finsish**.
+4. Mở rộng các thư mục và để ý cách mà thiết kế được thiết lập.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig19.png)
 
-Hierarchy for simulation
+Cấu trúc phân cấp cho mô phỏng
 
-### Launch the simulator which will automatically etutorialorate the model source file, load the simulation model, and run the simulation.
+### Khởi chạy trình mô phỏng, tự động biên dịch mã nguồn của mô hình, nạp mô hình mô phỏng và chạy mô phỏng
 
-1. In Vivado, select **Simulation > Run Simulation > Run Behavioral Simulation** to launch the simulator.
+1. Trong Vivado, chọn **Simulationn > Run Simulation > Run Behavioral Simulation** để chạy mô phỏng.
 
-   When done, the waveform window will show up.
+   Khi quá trình kết thúc, một cửa sổ biểu diễn dạng sóng sẽ hiện ra.
 
-2. Click on the zoom full button (![image-20220120160910167](img/Building_Basic_Elements_for_IPI/image-20220120160910167.png)) to see the entire simulation waveform. It should look similar to the one shown below.
+2. Ấn chọn vào nút zoom (![image-20220120160910167](img/Building_Basic_Elements_for_IPI/image-20220120160910167.png)) để thấy toàn bộ dạng sóng. Kết quả mô phỏng sẽ trông giống như trong hình dưới đây.
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig20.png)
 
-3. Click at 20 ns to show a marker.
+3. Bấm vào 20 ns để hiện thị thanh đánh dấu
 
-4. Add another marker by clicking (![image-20220120161124134](img/Building_Basic_Elements_for_IPI/image-20220120161124134.png)).  
+4. Thêm một thanh đánh dấu khác bằng cách ấn vào (![image-20220120161124134](img/Building_Basic_Elements_for_IPI/image-20220120161124134.png))
 
-   A blue ribbon will appear.
+Một dải màu xanh xuất hiện:
 
 ![image-20220120150705584](img/Building_Basic_Elements_for_IPI/fig21.png)
 
-5. Drag the blue ribbon to the where y makes transition from 0 to 1. Verify that the time difference is 5 ns (you may have to zoom in for accurate measurement).
 
-6. Close the simulation by selecting **File > Close Simulation** without saving the changes to the waveform.
+5. Kéo dải màu xanh tới vị trí tín hiệu y chuyển từ giá trị 0 sang 1. Đảm bảo rằng thời gian sai lệch là 5 ns (các bạn có thể phải phóng to vào để có phép đo chính xác).
 
-### Change the delay in the block diagram to 3, create the hdl wrapper, simulate the design and verify that the delay has changed to 3.
+6. Tắt trình mô phỏng bằng cách vào **File > Close Simulation** và không lưu chúng lại (without saving the changes to the waveform).
 
-1.   Select *Open Block Design* in the *Flow Navigator* pane.
+### Hay đổi giá trị độ trễ (Delay) sang 3, tạo HDL wrapper, mô phỏng thiết kế và chắc chắn rằng đã thay đổi độ trễ sang 3.
 
-2.   In the *Diagram*, tab, double-click the *xup_and2_0* instance to open the configuration form.
+1. Chọn *Open Block Design* trên thanh *Flow Navigator*.
+2. Trên tab **Diagram**, đúp chuột vào **xup_and2_0** để mở configuration form.
+3. Thay đổi giá trị độ trễ (Delay) sang 3 và ấn **OK**.
+4. Ấn chuột phải vào *design_1.bd* trên tab **Sources** và chọn **Create HDL Wrraper**.
+5. Chọn **Let Vivado Manage wrapper and auto-update** và ấn **OK** để hoàn tất.
+6. Trong Vivado, chọn **Run Simulation** > **Run Behavioral Simulation** để chạy mô phỏng.
+7. Chắc chắn rằng Delay đã được đổi sang giá trị 3.
 
-3.   Change the *delay* value to **3** and click **OK**.
+## Bước 4: Kiểm chứng thiết kế trong phần cứng
 
-4.   Right Click on *system.bd* (expand the hierarchy if necessary) in the **Sources** tab and select **Create HDL Wrapper**.
+### Thêm tập tin ràng buộc đã có sẵn
 
-5.   Select **Let Vivado Manage wrapper and auto-update** option and click OK when prompted
+1. Ấn *Add Sources*.
+2. Chọn *Add or Create Constraints* và ấn **Next**.
+3. Ấn *Add Files*, và vào đường dẫn **{SOURCES}** chọn **xup_and2.xdc** và ấn **Finish**.
 
-6.   In Vivado, select Run Simulation > **Run Behavioral Simulation** to launch the simulator.
+### Kết nối board mạch và bật nó lên. Tạo bitstream, mở hardware session, chương trình FPGA và xác định chức năng của nó
 
-7.   Verify that the delay has changed to 3.
+1. Ấn **Generate Bitstream** dưới tasks *Program and Debug* của thanh *Flow Navigator*.
 
-## Step 4 Verify the Design in Hardware
+   Quá trình tạo bitstream chạy trên thiết kế được triển khai. Khi quá trình hoàn tất, một hộp thoại Bitstream Generation Completed với ba tùy chọn sẽ được hiển thị.
 
-### Add the provided design constraint file.
+   Quá trình này sẽ có file **design_1_wrapper.bit** được tạo dưới folder **impl_1** được tạo trong folder **tutorial.runs**.
 
-1. Click *Add Sources.*
+2. Đảm bảo rằng nguồn điện được cấp chuyển sang USB và cáp Micro-USB được cung cấp được kết nối với board mạch và PC.
 
-2. Select *Add or Create Constraints* and click **Next.**
-
-3. Click *Add Files*, and browse to the **{SOURCES}** directory and select **xup_and2.xdc** and click **Finish.**
-
-### Connect the board and power it ON. Generate the bitstream, open a hardware session, program the FPGA and verify the functionality.
-
-1. Click on the **Generate Bitstream** entry under the *Program and Debug* tasks of the *Flow Navigator* pane.
-
-   The bitstream generation process will be run on the implemented design. When the process is completed a *Bitstream Generation* *Completed* dialog box with three options will be displayed.
-
-   This process will have **design_1_wrapper.bit** file generated under **impl_1** directory which was generated under the **tutorial.runs** directory.
-
-2. Make sure that the power supply source is jumper to *USB* and the provided Micro-USB cable is connected between the board and the PC.
-
-   Note that you do not need to connect the power jack and the board can be powered and configured via USB alone
+   Lưu ý rằng bạn không cần kết nối jack cắm nguồn và board mạch có thể được cấp nguồn và cấu hình chỉ qua USB.
 
 <img src="img/Building_Basic_Elements_for_IPI/fig39.png" alt="fig13" style="zoom:67%;" />
 
- Board settings for Boolean
+Cấu hình cho bo mạch Boolean
 
-For PYNQ-Z2, make sure that the jumper is set up **USB**(the left arrow) and **JTAG**(the right arrow)
+Đối với PYNQ-Z2, đảm bảo rằng jumber được thiết lập **USB** (mũi tên phía bên trái) và **JTAG** (mũi tên phía bên phải).
 
 <img src="img/Building_Basic_Elements_for_IPI/z2_setup.png" alt="fig13" style="zoom:67%;" />
 
-3. verifying the correctness of the function with tuning the switches on Boolean board or PYNQ-Z2 with RPI add-on board.
+3. Đảm bảo tính chính xác của hàm bằng cách điều chỉnh các công tắc trên bảng Boolean hoặc ZYNQ-Z2 với bảng hỗ trợ RPI.
 
-
-
-------------------------------------------------------
-<p align="center">Copyright&copy; 2022, Advanced Micro Devices, Inc.</p>
+<p align="center">
+  Tài liệu được dịch bởi Trịnh Lê Hoàng Long
+</p>

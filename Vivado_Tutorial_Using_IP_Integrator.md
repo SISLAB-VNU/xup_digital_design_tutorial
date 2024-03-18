@@ -1,114 +1,109 @@
-# Vivado Tutorial Using IP Integrator
+# Hướng dẫn sử dụng bộ tích hợp IP trong Vivado
 
-## Introduction
+## Giới thiệu
 
-This tutorial guides you through the design flow using Xilinx Vivado software to create a simple digital circuit using Vivado IP Integrator (IPI). A typical design flow consists of creating a Vivado project, optionally setting a user-defined IP library settings, creating a block design using various IP, creating a HDL wrapper, creating and/or adding user constraint file(s), optionally running behavioral simulation, synthesizing the design, implementing the design, generating the bitstream, and finally verifying the functionality in the hardware by downloading the generated bitstream file.  You will go through the typical design flow targeting the Spartan 7-50 based Boolean Board and Zynq-7020 based PYNQ-Z2. For Z2, you will be using an [RPI add-on board](https://www.tulembedded.com/FPGA/Products_RPI_Logic_Board.html), for adding more I/O resources. This add-on board plugs into the Raspberry Pi extension slot to provide extra accessible buttons and switches.
+Bài này sẽ hướng dẫn bạn luồng thiết kế sử dụng phần mềm Xilinx Vivado để thiết kế mạch số đơn giản sử dụng Bộ tích hợp IP(IPI) của Vivado. Một luồng thiết kế điển hình bao gồm việc tạo mới một dự án trong Vivado, cài đặt các cấu hình của thư viện IP của người dùng (không bắt buộc), tạo một thiết kế gồm các khối sử dụng các IP, tạo một thiết kế HDL (HDL wrapper), tạo mới hoặc/và thêm các file ràng buộc của người dùng, chạy mô phỏng ở mức hành vi (không bắt buộc), tổng hợp thiết kế, thực thi thiết kế, tạo ra chuỗi bit, và cuối cùng kiểm chứng về mặt chức năng trên phần cứng bằng cách tải xuống tập tin chuỗi bit đã tạo ra. Các bạn sẽ thực hiện luồng thiết kế điển hình hướng đến bo mạch Boolean dùng Spartan 7-50 và bo mạch PYNQ-Z2 dùng Zynq-7020. Đối với bo mạch Z2, bạn sẽ cần sử dụng [mạch mở rộng RPI](https://www.tulembedded.com/FPGA/Products_RPI_Logic_Board.html), để thêm nhiều hơn tài nguyên Vào/Ra (I/O Resources). Mạch mở rộng này được nối với khe cắm mở rộng Raspberry Pi để cung cấp thêm các nút và công tắc.
 
-## Objectives
+## Mục tiêu
+Sau khi thực hiện xong bài hướng dẫn này, các bạn sẽ có thể: 
 
-After completing this tutorial, you will be able to:
+- Tạo mới một dự án trong Vivado dùng cho một thiết bị FPGA cụ thể để nạp vào bo mạch Boolean hoặc PYNQ-Z2 board.
 
-- Create a Vivado project targeting a specific FPGA device located on the Boolean or PYNQ-Z2 board
+- Sử dụng tập tin ràng buộc của Xilinx (XDC) được cung cấp sẵn để ràng buộc vị trí các chân Vào/Ra.
 
--  Use the provided partially completed Xilinx Design Constraint (XDC) file to constrain some of the I/O pin locations
+- Thêm các ràng buộc sử dụng tính năng lập trình kịch bản dùng ngôn ngữ Tcl trong Vivado
 
--  Add additional constraints using the Tcl scripting feature of Vivado
+- Mô phỏng thiết kế bằng công cụ mô phỏng Xsim.
 
-- Simulate the design using the XSim simulator
+- Tổng hợp và thực hiện thiết kế.
 
-- Synthesize and implement the design
+- Tạo ra luồng bit.
 
-- Generate the bitstream
+- Cấu hình FPGA sử dụng luồng bit đã tạo và xác minh chức năng.
 
-- Configure the FPGA using the generated bitstream and verify the functionality
+## Các bước thực hiện
 
-## Procedure
+Bài hướng dẫn này được chia thành nhiều bước bao gồm các bao gồm các nội dung tổng quan cung cấp thông tin về các hướng dẫn chi tiết tiếp theo. Hãy làm theo các hướng dẫn chi tiết này để hoàn thành bài hướng dẫn.
 
-This tutorial is broken into steps that consist of general overview statements providing information on the detailed instructions that follow. Follow these detailed instructions to progress through the tutorial.
+### Miêu tả thiết kế
 
-### Design Description
-
-The design consists of  several inputs who are logically operated on before the results are output on the remaining LEDs and others are contained in a hierarchical block(the `add_on_block` in the diagram) as shown in the following figure.
+Thiết kế bao gồm một số đầu vào được vận hành một cách hợp lý trước khi kết quả được xuất ra trên các đèn LED còn lại và các đầu vào khác được chứa trong một khối phân cấp (`add_on_block` trong sơ đồ) như được minh họa trong hình sau.
 
 ![fig1](./img/Vivado_Tutorial_Using_IP_Integrator/top_schema.png)
 
-Completed Design
+Thiết kế hoàn chỉnh
 
-## General Flow for this tutorial
+## Luồng thực thi chung cho bài hướng dẫn này
 
-- Create a Vivado project and set IP library setting
+- Tạo mới một dự án trong và cài đặt các cấu hình chho thư viện IP
 
-- Create a block design
+- Tạo mới một thiết kế khối (block design)
 
-- Create a HDL wrapper and add the provided constraint file
+- Tạo mới một thiết kế HDL đóng gói và thêm vào tập tin ràng buộc đã được cung cấp
 
-- Simulate the design using XSim simulator
+- Mô phỏng thiết kế bằng công cụ mô phỏng XSim
 
-- Synthesize the design
+- Tổng hợp thiết kế
 
-- Implement the design
+- Thực hiện thiết kế
 
-- Perform the timing simulation
+- Thực hiện mô phỏng có thời gian
 
-- Verify the functionality in hardware using the target board
+- Kiểm chứng chức năng trên phần cứng sử dụng bo mạch đã chọn
 
-###  In the instructions for the tutorial
+### Trong các chỉ dẫn cho bài hướng dẫn này
 
-The absolute path for the source code should only contain ASCII characters. Deep path should also be avoided since the maximum supporting length of path for Windows is 260 characters
+Đường dẫn tuyệt đối cho mã nguồn chỉ được chứa các ký tự ASCII. Tránh sử dụng các đường dẫn dài bởi vì Windows hỗ trợ đường dẫn có độ dài tối đa 260 ký tự
 
-**{SOURCES}** refers to *\\sources\\Vivado_tutorial_Using_IP_Integrator\\tutorial*. You can use the source files from the cloned repository's *sources* directory
+**{SOURCES}** đề cập đến *\\sources\\Vivado_tutorial_Using_IP_Integrator\\tutorial*. Bạn có thể sử dụng các tập tin mã nguồn từ thư mục *sources* của kho lưu trữ đã được nhân bản
 
-**{TUTORIAL}** refers to *C:\digital_design_tutorial\\*. It assumes that you will create the mentioned directory structure to carry out the labs of this tutorial
+**{TUTORIAL}** đề cập đến *C:\digit_design_tutorial\\*. Giả định rằng bạn sẽ tạo cấu trúc thư mục được đề cập để thực hiện các bài thực hành trong hướng dẫn này
 
-**{BOARD}** refers to target *Boolean* and *Z2* boards
+**{BOARD}** đề cập đến bo mạch *Boolean* và *Z2* đã chọn
 
-## Step 1 Create a Vivado Project using IDE
+## Bước 1 Tạo mới một dự án trong Vivado sử dụng giao diện đồ họa
 
-### Create a Vivado Project
+### Tạo mới một dự án trong Vivado
 
-Launch Vivado and create a project targeting the **{BOARD}** and using the Verilog HDL. Use the provided Verilog source files and *tutorial_**{BOARD}**.xdc*  file from the {SOURCES} directory.
+Chạy chương trình Vivado và tạo một dự án sử dụng **{BOARD}** và dùng mã nguồn Verilog HDL. Sử dụng tập tin mã nguồn Verilog được cung cấp và file *tutorial_**{BOARD}**.xdc* từ thư mục {SOURCE}.
 
-1. Open Vivado by selecting **Start > Xilinx Design Tools > Vivado 2021.2**
+1. Chạy Vivado bằng chọn **Start > Xilinx Design Tools > Vivado 2021.2**
 
-2. Click **Create New Project** to start the wizard. You will see *Create A New Vivado Project* dialog box. Click **Next**.
+2. Nhấn chuột vào **Create New Project** để bắt đầu quá trình hướng dẫn. Hộp thoại *Create A New Vivado Project* xuất hiện. Nhấn chuột vào **Next**.
 
-3. Click the Browse button of the *Project location* field of the **New Project** form, browse to **{TUTORIAL}**, and click **Select**.
+3. Nhấn chuột vào nút Browse trong trường *Project location* của cửa sổ **New Project**, chọn thư mục **{TUTORIAL}**, và nhấn chuột vào **Select**.
 
-4. Enter **tutorial** in the *Project name* field.  Make sure that the *Create Project Subdirectory* box is checked.  Click **Next**.
+4. Điền tên của dự án là **tutorial** trong trường *Project name*. Đảm bảo rằng tùy chọn *Create project subdirectory* đã được đánh dấu. Nhấn chuột vào **Next**.
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig2.png" alt="image-20211223145422112" style="zoom:65%;" />
+<center>Tên của dự án và nơi lưu trữ</center>
 
-<center> Project Name and Location entry</center>
+5. Chọn tùy chọn **RTL Project** trong cửa sổ *Project Type* và nhấn chuột vào **Next**
 
+6. Chọn **Verilog** làm *Target language* và *Simulator langugage* trong cửa sổ *Add Sources*.
 
-5. Select **RTL Project** option in the *Project Type* form and click **Next**.
+7. Nhấn chuột vào **Next**.
 
-6. Select **Verilog** as the *Target language* and *Simulator language* in the *Add Sources* form.
+8. Nhấn chuột vào **Next** để chuyển sang cửa sổ *Add Constraints*.
 
-7. Click **Next**.
+9.  Chọn mục tập tin ràng buộc. Nếu được hiển thị và sử dụng nút 'X' ở bên phải để xóa nó.
 
-8. Click **Next** to get to the *Add Constraints*  form.
+   Tập tin ràng buộc thiết kế này của Xilinx gán các vị trí Vào/Ra vật lý vào các công tắc và đèn LED trên bo mạch FPGA. Thông tin này có thể được thu thập từ bản vẽ mạch điện của bo mạch hoặc từ hướng dẫn sử dụng của bo mạch. Chúng ta sẽ thêm tập tin này sau.
 
-9. Select constraints file entries, if displayed, and use ‘X’ button on the right to remove it.
-
-   This Xilinx Design Constraints file assigns the physical IO locations on FPGA to the switches and LEDs located on the board.  This information can be obtained either through a board’s schematic or board’s user guide. We will add the file later.
-
-10. In the *Default Part* form, using the **Parts** option and various drop-down fields of the **Filter section**, Select the **XC7Z020clg400-1**(for PYNQ-Z2) or **xc7s50csga324-1** (for Boolean).
-
-
+10.  Trong cửa sổ *Default Part*, sử dụng tùy chọn **Parts** và nhiều trường kéo xuống trong **Filter section**, Chọn **XC7Z020clg400-1** (cho PYNQ-Z2) hoặc **xc7s50csga324-1** (cho Boolean).
 
 ![fig3](img/Vivado_Tutorial_Using_IP_Integrator/fig3.png)
 
-<center>Part selection for Boolean </center>
-
+<center>Lựa chọn Part cho Boolean </center>
 
 ![fig3](img/Vivado_Tutorial_Using_IP_Integrator/fig4.png)
 
-<center>Part selection for PYNQ-Z2 </center>
+<center>Lựa chọn Part cho PYNQ-Z2 </center>
 
-11. Click **Finish** to create the Vivado project.
-
-    Use the Windows Explorer and look at the **{TUTORIAL}** directory. You will find the file structure as shown below
+11. Nhấn chuột vào **Finish** để hoàn thành việc tạo dự án trong Vivado.
+    
+    Sử dụng Window Explorer và xem thư mục **{TUTORIAL}**.
+Các bạn sẽ thấy thư mục có cấu trúc như sau
 
     ```
     //File structure of the created Vivado project
@@ -126,388 +121,253 @@ Launch Vivado and create a project targeting the **{BOARD}** and using the Veril
     ├─tutorial.ip_user_files
     └─tutorial.sim
     ```
+ 
+​        File có tên mở rộng `.xpr` là *tập tin dự án trong Vivado*
 
-​        File with extension name `.xpr` is the *(Vivado) Project File*
+### Cài đặt đường dẫn tới kho lưu trữ IP để trỏ đến thư viện IP XUP được cung cấp
 
-### Set IP repository path to point to the provided XUP IP library
-
-1. In the *Flow Navigator* window, click on **Settings** under the Project Manager group.
+1. Trong cửa sổ *Flow Navigator*, chọn **Settings** trong Project Manager group.
 
    <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig5.png" alt="fig5" style="zoom:67%;" />
 
 <center>Project Manager Settings</center>
 
-2. In the *Project Settings* window, click on the **IP > Repository**
+2. Trong cửa sổ *Project Settings*, nhấn chuột vào **IP > Repository**
 
    <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig6.png" alt="fig6" style="zoom:67%;" />
 
 <center>Project Settings Panel</center>
 
-3. Click on the ![add](img/Vivado_Tutorial_Using_IP_Integrator/add.png)  button, browse to *.\sources* and select **XUP_LIB** directory, and click **Refresh All > OK**.
+3. Nhấn chuột vào nút ![add](img/Vivado_Tutorial_Using_IP_Integrator/add.png), chọn đến *.\sources* và chọn thư mục **XUP_LIB**, và nhấn chuột vào **Refresh All > OK**.
 
-   The directory will be scanned and the available IP entries will be displayed.
+   Thư mục sẽ được quét và các cổng IP có sẵn sẽ được hiển thị.
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig7.png" alt="fig7" style="zoom:67%;" />
 
-<center>Adding IP Repositories</center>
+<center>Thêm kho lưu trữ IP</center>
 
-4. Click *Apply* and *OK* to close the form.
+4. Nhấn chuột vào *Apply* và *OK* để đóng cửa sổ.
 
-## Step 2 Create a Block Design
+## Bước 2 tạo mới một thiết kế khối
 
-### Create a block design
+### Tạo mới thiết kế khối
 
-1. In the *Flow Navigator* window, click on **Create Block Design** under the IP Integrator block
+1. Trong *Flow Navigator*, chọn **Create Block Design** trong mục IP Integrator
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig8.png" alt="fig8" style="zoom:67%;" />
 
-<center>Invoking IP Integrator to create a block diagram</center>
+<center>Sử dụng IP Integrator để tạo một sơ đồ của khối</center>
 
-2. Click **OK** to create a block design named *design_1*
+2. Chọn **OK** để tạo một thiết kế khối có tên *design_1*
 
-3. IP from the catalog can be added in different ways. Click on *Add IP* button in the top of the *Diagram* panel, or press Ctrl + I, or right-click anywhere in the Diagram workspace and select Add IP
+3. Các IP trong danh mục có thể được thêm vào thiết kế khối theo nhiều cách khác nhau.
+Nhấn chuột vào nút bấm *Add IP* ở trên *Diagram* panel, hoặc ấn tổ hợp phím Ctrl + I, hoặc bấm chuột phải vào vị trí bất kỳ trong Khu vực vẽ sơ đồ (Diagram workspace) và chọn *Add IP*
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig9.png" alt="fig9" style="zoom:67%;" />
 
-<center>Add IP to Block Diagram</center>
+<center>Thêm IP vào Sơ đồ khối</center>
 
-4. Once the IP Catalog is open, type “inv” into the Search bar, find and double click on **XUP 1-input INV** entry, or click on the entry and hit the Enter key to add it to the design.
+4. Khi danh mục IP được mở, nhập "inv" vào thanh Tìm kiếm (Search bar), tìm và nhấn đúp chuột vào mục **XUP 1-input INV**, hoặc nhấn chuột vào mục đó  và nhấn phím Enter để thêm nó vào thiết kế.
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig10.png" alt="fig10" style="zoom:67%;" />
 
-<center>Add an inverter to the design</center>
+<center>Thêm cổng đảo (inverter) vào thiết kế</center>
 
-5. Similarly, add another instance of an inverter.
+5. Tương tự như các bước trên, hãy thêm 1 cổng đảo nữa.
 
-6. Add two instances of 2-input AND gate and an instance of 2-input OR gate.
+6. Thêm 2 cổng AND 2 đầu vào và 1 cổng OR 2 đầu vào.
 
-   You can create an instance of already present IP, by clicking on it, pressing Ctrl key, and dragging the instance with the left mouse button.
+Bạn có thể tạo 1 phiên bản của IP đã có sẵn bằng cách nhấn chuột vào nó, bấm phím Ctrl và kéo thả phiên bản đó bằng nút chuột trái.
 
 <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig11.png" alt="fig11" style="zoom:67%;" />
 
-<center>Added necessary instances</center>
+<center>Thêm các thiết kế cần thiết</center>
 
-### Complete the Design
+### Hoàn thành thiết kế
 
-1. Right-click on the **xup_inv_0** instance’s input port and select **Make External**. Similarly, make the output port of the same instance and make it external.
+1. Nhấn chuột phải vào lối vào của thiết kế **xup_inv_0** và chọn **Make External**. Làm tương tự cho lối ra của cổng.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig12.png" alt="fig12" style="zoom:67%;" />
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig12.png>)
+Tạo cổng bên ngoài
+2. Chọn cổng *a_0*, đổi tên thành SW0.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig13.png>)
+Thay đổi tên của cổng
+3. Tương tự, thay đổi cổng lối ra *y_0* thành **LD0**.
+4. Sắp xếp OR2 sao cho ở gần và bên phải 2 cổng AND2.
+5. Sắp xếp cổng đảo thứ hai ở bên trái 2 cổng AND2
+6. Di trỏ chuột lại gần cổng, bấm chuột trái để kết nối dây dẫn giữa các cổng.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig14.png>)
+Kết nối giữa các cổng
+Sơ đồ này tương tự như cách kết nối logic giữa SW1, SW2, SW3, LD2
+7. Mở rộng kéo dài các cổng lối vào của **xup_inv_1**, cổng *b* của **xup_and2_1**, và 1 cổng của **xup_and2_0**.
+8. Tương tự, kéo dài cổng lối ra của **xup_or2_0**.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig15.png>)
+Kéo dài các cổng
+9. Đổi tên của *a_0* thành **SW1**, *a_1* thành **SW2**, *b_0* thành **SW3**, và *y_0* thành **LD2**.
+10. Chuột phải bất kỳ vào bản vẽ thiết kế và chọn Create Port.
+11. Đặt Tên cổng (Port name) là LD1, chọn loại cổng là *output*.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig16.png>)
+Tạo cổng lối ra
+12. Tương tự, tạo cổng lối ra có tên là **LD3**.
+13. Kết nối cổng lối ra của **xup_and2_1** tới cổng lối ra của **xup_inv_1**.
+14. Kết nối cổng lối ra của **xup_and2_0** tới **LD1** và **xup_and2_1** tới **LD3**. Bấm nút Vẽ lại.
+Sơ đồ trông sẽ giống như ảnh sau
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig17.png>)
+Thiết kế hoàn thiện một phần
+### Hoàn thiện nốt thiết kế bao gồm các công tắc và LED còn lại với khối phân cấp
+Để tạo bộ cộng 2-bit (2-bit adder) với các cổng logic đơn giản, ta cần sử dụng bộ cộng bán phần (half adder) trước.
+Bảng chân lý của bộ cộng bán phần
+|a|b|sum|carry out|
+|-|-|:-:|:-------:|
+|0|0| 0 |    0    |
+|0|1| 1 |    0    |
+|1|0| 1 |    0    |
+|1|1| 0 |    1    |
 
-<center>Making Ports External</center>
-
-2. Click on the *a\_0* port, and change the name to **SW0** in its properties form.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig13.png" alt="fig13" style="zoom:67%;" />
-
-<center>Changing/assigning port name</center>
-
-3. Similarly, change the output port *y\_0* to **LD0** (as per the diagram in Figure 1)
-
-4. Arrange OR2 instance such that it is close and right to the two instances of the AND2 as seen in the diagram below.
-
-5. Arrange the second instance of the inverter on the left of the two instances of the AND2 gates.
-
-6. Using the left-button of the mouse, draw a connection between the outputs of the AND2 instances and the two input of the OR2.
-
-   When you move the mouse closer to a port, the cursor becomes drawing pencil icon. Click the left-button of the mouse and keeping the button pressed draw it towards the destination port. You make a connection this way.
-
-7. Similarly, connect the output of the inverter to the **b** input of the `xup_and2_0` instance.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig14.png" alt="fig14" style="zoom:67%;" />
-
-<center>Connecting Instances</center>
-
-  This diagram is similar to the logic connected between SW1, SW2, SW3, and LD2.
-
-8. Make input ports of the **xup_inv_1**, *b* port of the **xup_and2_1**, and *a* port of the **xup_and2_0** instances external.
-9. Similarly, make the output port of the **xup_or2_0** instance external.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig15.png" alt="fig15" style="zoom:67%;" />
-
-<center>Making ports external</center>
-
-10. Change the name of *a_0* to **SW1**, *a_1* to **SW2**, *b\_0* to **SW3**, and *y\_0* to **LD2**.
-
-11. Right-click somewhere on the canvas and select Create Port.
-
-    A Create Port form will appear.
-
-12. Enter **LD1** as the port name, using the drop-down button select the type as *output*, and click **OK.**
-
-    <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig16.png" alt="fig16" style="zoom:67%;" />
-
-<center>reating an output port</center>
-
-13. Similarly, create the output port naming it as **LD3**.
-
-14. Connect the input port *a* of the **xup_and2_1** instance to output port of the instance **xup_inv_1**.
-
-15. Connect the output port of the **xup_and2_0** to **LD1** and **xup_and2_1** to **LD3**. Click on the re-draw button.
-
-    The diagram will look similar to shown below.
-
-    <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig17.png" alt="fig17" style="zoom:67%;" />
-
-<center>Partially completed design</center>
-
-### Complete the design including rest of the switches and LDs with a hierarchical block
-
-To create a 2-bit adder with the basic logic gates, we need to implement a half adder first. The truth table of a half adder is
-
-| a    | b    | sum  | carry out |
-| ---- | ---- | ---- | --------- |
-| 0    | 0    | 0    | 0         |
-| 0    | 1    | 1    | 0         |
-| 1    | 0    | 1    | 0         |
-| 1    | 1    | 0    | 1         |
-
-derive the logical expression from the truth table above, we got
-
-sum = a xor b
+Rút ra biểu thức logic từ bảng chân lý ở trên, ta có:
+sum= a xor b 
 carry_out = a and b
-
-A half adder consists of one exclusive or (XOR) gate and an AND gate, as shown in the following figure
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/half_adder_inter.png" alt="fig13" style="zoom:67%;" />
-
-Internal Schematic of a Half Adder
-
-Using two half adders, we can build a full adder. The truth table of a full adder is
-
-| a    | b    | carry in | sum  | carry out |
-| ---- | ---- | -------- | ---- | --------- |
-| 0    | 0    | 0        | 0    | 0         |
-| 0    | 0    | 1        | 1    | 0         |
-| 0    | 1    | 0        | 1    | 0         |
-| 0    | 1    | 1        | 0    | 1         |
-| 1    | 0    | 0        | 1    | 0         |
-| 1    | 0    | 1        | 0    | 1         |
-| 1    | 1    | 0        | 0    | 1         |
-| 1    | 1    | 1        | 1    | 1         |
-
-Connecting the carry out of the first half adder to the input of the second adder, we can construct a full adder
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/full_adder_inter.png" alt="fig13" style="zoom:67%;" />
-
-Internal Schematic of a Full Adder
-
-The 2-bit adder will be using two cascaded full adder to perform the logical function
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_inter.png" alt="fig13" style="zoom:67%;" />
-
-Internal Schematic of a Ripple Carry Adder
-
-Follow the instructions below to create a 2-bit carry adder
-
-1. create a half adder schematic using a logic gates as shown below
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/half_adder_inter_bd.png" alt="fig13" style="zoom:67%;" />
-
-Block Design of a Half Adder
-
-2. select all the blocks, nets and ports of this half adder, **Right click** on the schematic, choose **Create Hierarchy** in the menu.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/create_hie.png" alt="fig13" style="zoom:67%;" />
-
-Create the hierarchy
-
-3. Change the hierarchy name to `half_adder1` in the pop-out window
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/change_hie_name.png" alt="fig13" style="zoom:67%;" />
-
-Change the hierarchy name
-
-and you will get a half adder block like this
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/half_adder_bd.png" alt="fig13" style="zoom:67%;" />
-
-Top View of a Hierarchical Half Adder
-
-4. Using the generated half adder block, construct a full adder. Change hierarchical half adder blocks appropriately as shown.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/full_add_inter_bd.png" alt="fig13" style="zoom:67%;" />
-
-Internal Block Design of a Full Adder
-
-5. Repeat the steps for creating hierarchy for a 1-bit full adder.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/full_add_bd.png" alt="fig13" style="zoom:67%;" />
-
-Top View of a Hierarchical Full Adder
-
-6. Use the 1-bit full adder to construct a 2-bit ripple carry adder as shown in the diagram below.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_bd.png" alt="fig13" style="zoom:67%;" />
-
-Internal Block Design of a Ripple Carry Adder
-
-7. Repeat the steps for creating hierarchy for a 2-bit ripple carry adder and make the ports external.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_top_bd.png" alt="fig13" style="zoom:67%;" />
-
-Top View of a Hierarchical Ripple Carry Adder
-
-8. Add another multiplexor for the block design and connect the ports to SW4, SW5, SW6 and LD4.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/mux.png" alt="fig13" style="zoom:67%;" />
-
-Pin Mapping for the Mux
-
-9. Select the multiplexor and the adder to create a new hierarchy called `add_on_block`.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/add_on_block_bd.png" alt="fig13" style="zoom:67%;" />
-
-Top View of the Add-on Block
-
-
-10. Connect the ports of the `add_on_block` block with Switches and LEDs.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/partial_top_bd.png" alt="fig13" style="zoom:67%;" />
-
-Partially Completed Design
-
-11. The complete block design has been created.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/top_schema_bd.png" alt="fig13" style="zoom:67%;" />
-
-
-## Step 3 Create HDL Wrapper and Add a Constraint File
-
-### Create a HDL wrapper and analyze the hierarchy
-
-1. In the *sources* view, Right Click on the block diagram file, **design_1.bd**, and select **Create HDL Wrapper** to create the HDL wrapper file. When prompted, select **Let Vivado manage wrapper and auto-update**, click **OK.**
-
-2. In the *Sources* pane, expand the hierarchy.
-
-
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig19.png" alt="fig13" style="zoom:67%;" />
-
-Hierarchical design
-
-3. Double-click the **design_1_wrapper.v** entry to open the file in text mode and observe the instantiation of the *design_1* module.
-4. Double-click the **design_1.v** entry to open the file in text mode and observe the instantiation of the lower-level modules.
-
-### Add tutorial_{BOARD}.xdc constraints source file and analyze the content
-
-1. Click on the **Add Sources** under the *Project Manager* group in the *Flow Navigator* window.
-
-2. Select the **Add or Create Constraints** option and click **Next**.
-
-3. Click **Add Files…** and browse to **{SOURCES}\tutorial**
-
-4. Select **tutorial_{BOARD}.xdc** and click **OK**.
-
-5. Click **Finish** to close the window and add the constraints file in the project under the Constraints group.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig20.png" alt="fig13" style="zoom:67%;" />
-
-Constraints file added for the Boolean board
-
-6. In the *Sources* pane, expand the *Constraints* folder and double-click the **tutorial_{BOARD}.xdc**, **tutorial_boolean** for Boolean or **tutorial_z2.xdc**(for PYNQ-Z2) entry to open the file in text mode.
-
-7. **In tutorial_{BOARD}.xdc**: Lines 10-16 define the pin locations of the input SW0-SW6 and lines 21-27 define the pin locations of the output LD0-LD6.
-
-   **In tutorial_z2.xdc**: Lines 2-15 define the pin locations of the input SW0-SW6 and lines 24-37 define the pin locations of the output LD0-LD6.
-
-   The SW7 and LD7 are deliberately left out so you can learn how to enter them using other methods.
-
-### Perform RTL analysis on the source file
-
-1. Expand the *Open Elaborated Design* entry under the *RTL Analysis* tasks of the *Flow Navigator* pane and click on **Schematic**.
-
-2. Click **Save** if asked.
-
-   The model (design) will be elaborated and a logic view of the design is displayed.
-
-3. Click on the **+** sign inside the block to see its content. Use the *Zoom Full(![image-20211227164120619](img/Vivado_Tutorial_Using_IP_Integrator/image-20211227164120619.png))* button to see the entire design.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig21.png" alt="fig13" style="zoom:67%;" />
-
-A logic View of the design
-
-
-### Add I/O constraints for the missing LED and switch pins
-
-1. Once RTL analysis is performed, another standard layout called the *I/O Planning* is available. Click on the drop-down button and select the *I/O Planning* layout.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig22.png" alt="fig13" style="zoom:67%;" />
-
-   I/O Planning layout selection
-
-   Notice that the Package view is displayed in the Auxiliary View area, Device Constraints tab is selected, and I/O ports tab is displayed in the Console View area. Also notice that design ports (LD* and SW*) are listed in the I/O Ports tab with both having multiple I/O standards.
-
-   Move the mouse cursor over the Package view, highlighting different pins. Notice the pin site number is shown at the bottom of the Vivado GUI, along with the pin type (User IO, GND, VCCO…) and the I/O bank it belongs to.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig23.png" alt="fig23" style="zoom:67%;" />
-
-I/O Planning layout view of Boolean
-
-![image-20220119121904320](img/Vivado_Tutorial_Using_IP_Integrator/z2_IOplanning.png)
-
-I/O Planning layout view of PYNQ-Z2
-
-2. Click under the *I/O Std* column across the **LD7** row and select *LVCOMS33*. This assigns the LVCMOS33 standard to the site.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig24.png" alt="fig13" style="zoom:67%;" />
-
-Assigning I/O standard
-
-3. Similarly, click under the *Package Pin* column across LD7 row to see a drop-down box appear.
-
-   **For Boolean**: Type **E**  in the field to jump to Exx  pins, scroll-down until you see E5 , select E5 and hit the *Enter* key to assign the pin.
-
-   **For PYNQ-Z2**: Type **M**  in the field to jump to Mxx  pins, scroll-down until you see M14 , select M14 and hit the *Enter* key to assign the pin.
-
-4. You can also assign the pin constraints using tcl commands. Type in the following command in the Tcl Console tab to assign the *P2* (Boolean) pin location and the *LVCSMOS33* I/O standard to **SW7** hitting the Enter key after each command.
-
-   **Boolean:**
-
-   ```tcl
-   set_property -dict {PACKAGE_PIN P2 IOSTANDARD LVCMOS33} [get_ports {SW7}]
-   ```
-   **PYNQ-Z2**
-
-   ```tcl
-   set_property -dict {PACKAGE_PIN W9 IOSTANDARD LVCMOS33} [get_ports {SW7}]
-   ```
-
-   Observe the pin and I/O standard assignments in the I/O Ports tab. You can also assign the pin by selecting its entry (SW7) in the I/O ports tab, and dragging it to the Package view, and placing it at the P2 (Boolean) location. You can assign the LVCMOS33 standard by selecting its entry (SW7), selecting Configure tab of the I/O Port Properties window, followed by clicking the drop-down button of the I/O standard field, and selecting LVCMOS33.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig25.png" alt="fig13" style="zoom:67%;" />
-
-Assigning I/O standard through the I/O Port Properties form
-
-5. Select **File > Constraints > Save** and click **OK** to save the constraints in the **tutorial_boolean.xdc** or **tutorial_z2.xdc** file.
-
-6. Close the eleborated design by selecting **File > Close Elaborated Design** .
-
-## Step 4 Simulate the Design using the XSim Simulator
-
-### Add the tutorial_tb.v testbench file
-
-1. Click **Add Sources** under the *Project Manager* tasks of the *Flow Navigator* pane.
-
-2. Select the *Add or Create Simulation Sources* option and click **Next**.
-
-3. In the *Add Sources Files* form, click the **Add Files…** button.
-
-4. Browse to the **{SOURCES}\tutorial** folder and select *tutorial_tb.v* and click **OK**.
-
-5. Click **Finish**.
-
-6. Select the *Sources* tab and expand the *Simulation Sources* group.
-
-   The tutorial_tb.v file is added under the *Simulation Sources* group, and **system_wrapper_1.v** is automatically placed in its hierarchy as a tut1 instance.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig26.png" alt="fig13" style="zoom:67%;" />
-
-Simulation Sources hierarchy
-
-7. Using the Windows Explorer, verify that the **sim_1** directory is created at the same level as constrs_1 and sources_1 directories under the tutorial.srcs directory, and that a copy of tutorial_tb.v is placed under **vivao_tutorial.srcs > sim_1 > imports > tutorial**.
-8. Double-click on the **tutorial_tb** in the *Sources* pane to view its contents.
-
-```verilog
+Bộ cộng bán phần bao gồm 1 cổng XOR và 1 cổng AND
+ ![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/half_adder_inter.png>)
+ Sơ đồ mạch của Bộ cộng bán phần
+ 
+ Sử dụng 2 Bộ cộng bán phần, ta có thể xây dựng nên Bộ cộng toàn phần (full adder). Bảng chân lý của Bộ cộng toàn phần như sau
+|a|b|carry in|sum|carry out|
+|-|-|:------:|:-:|:-------:|
+|0|0|   0    | 0 |    0    |
+|0|0|   1    | 1 |    0    |
+|0|1|   0    | 1 |    0    |
+|0|1|   1    | 0 |    1    |
+|1|0|   0    | 1 |    0    |
+|1|0|   1    | 0 |    1    |
+|1|1|   0    | 0 |    1    |
+|1|1|   1    | 1 |    1    |
+
+Kết nối carry_out của Bộ cộng bán phần đầu tiên với lối vào của Bộ cộng thứ 2, ta có thể xây dựng Bộ cộng toàn phần
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/full_adder_inter.png>)
+Sơ đồ Bộ cộng toàn phần
+
+Bộ cộng 2-bit sẽ được sử dụng 2 Bộ cộng toàn phần cascade (cascaded full adder) để thực hiện chức năng logic
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_inter.png>)
+Sơ đồ của Ripple Carry Adder
+
+Dựa theo hướng dẫn sau để tạo Bộ cộng 2-bit có nhớ (2-bit carry adder)
+1. Tạo sơ đồ bộ cộng bán phần bằng cách sử dụng cổng logic như sau
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/half_adder_inter_bd.png>)
+Thiết kế khối của bộ cộng bán phần
+2. Chọn tất cả các khối, lưới và cổng của bộ cộng bán phần này, Nhấp chuột phải vào sơ đồ, chọn Tạo thứ bậc (**Create Hierarchy**) trong menu.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/create_hie.png>)
+Tạo thứ bậc
+3. Thay đổi tên phân cấp (hierarchy name) thành `half_adder1` trong cửa sổ sau
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/change_hie_name.png>)
+Thay đổi tên phân cấp
+Và bạn sẽ được khối half adder như sau
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/half_adder_bd.png>)
+
+4. Sử dụng khối half adder đã tạo để xây dựng full adder. Thay đổi các khối half adder phân cấp (hierarchical half adder) phù hợp như minh họa.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/full_add_inter_bd.png>)
+5. Lặp lại các bước tạo cấu trúc phân cấp cho 1-bit full adder.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/full_add_bd.png>)
+6. Sử dụng 1-bit full adder để xây dựng 2-bit ripple carry adder như trong sơ đồ bên dưới.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_bd.png>)
+7. Lặp lại các bước để tạo cấu trúc phân cấp cho 2-bit ripple carry adder và đặt các cổng ở bên ngoài.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/ripple_carry_top_bd.png>)
+8. Thêm một bộ ghép kênh khác cho thiết kế khối và kết nối các cổng với SW4, SW5, SW6 và LD4.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/mux.png>)
+9. Chọn bộ ghép kênh và bộ cộng để tạo một hệ thống phân cấp mới gọi là `add_on_block`.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/add_on_block_bd.png>)
+10. Kết nối các cổng của khối `add_on_block` với các công tắc và LED.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/partial_top_bd.png>)
+Hoàn thiện thiết kế một phần
+11. Thiết kế khối hoàn chỉnh đã được hoàn thiện.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/top_schema_bd.png>)
+
+## Bước 3: Tạo trình bao bọc HDL (HDL Wrapper) và thêm tệp ràng buộc
+### Tạo HDL Wrapper và phân tích thứ bậc
+1. Trong chế độ xem *sources*, Nhấp chuột phải vào tệp sơ đồ khối, **design_1.bd**, và chọn Tạo HDL Wrapper (**Create HDL Wrapper**) để tạo tệp HDL Wrapper. Khi được nhắc, hãy chọn Để Vivado quản lý trình bao bọc và tự động cập nhật (**Let Vivado manage wrapper and auto-update**), chọn OK.
+2. Trong ngăn *Sources*, mở rộng phần Hệ thống phân cấp.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig19.png>)
+Thiết kế phân cấp
+3. Bấm đúp vào **design_1_wrapper.v** để mở tệp ở chế độ văn bản và quan sát quá trình khởi tạo mô-đun *design_1*.
+4. Bấm đúp vào **Design_1.v** để mở tệp ở chế độ văn bản và quan sát quá trình khởi tạo của các mô-đun cấp thấp hơn.
+
+### Thêm tệp nguồn ràng buộc (constraints source file) tutorial_{BOARD}.xdc và phân tích nội dung
+1. Nhấp vào **Add Sources** trong nhóm *Project Manager* dự án trong *Flow Navigator*.
+2. Chọn tùy chọn **Add or Create Constraints** và chọn Next.
+3. Nhấp vào **Add files...** và duyệt đến **{SOURCES}\tutorial**
+4. Chọn **tutorial_{BOARD}.xdc** và chọn OK.
+5. Nhấp vào **Finish** để đóng cửa sổ và thêm tệp ràng buộc vào project trong nhóm Constraints.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig20.png>)
+Tệp ràng buộc đã được thêm vào board Boolean
+6. Trong ngăn *Sources*, mở rộng thư mục *Constraints* và bấm đúp vào **tutorial_{BOARD}.xdc**, **tutorial_boolean** cho Boolean hoặc **tutorial_z2.xdc** (cho PYNQ-Z2) để mở tệp ở chế độ văn bản.
+
+7. Trong **tutorial_{BOARD}.xdc**: Dòng 10-16 xác định vị trí chân cắm của lối vào SW0-SW6 và dòng 21-27 xác định vị trí chân cắm của lối ra LD0-LD6.
+Trong **tutorial_z2.xdc**: Dòng 2-15 xác định vị trí chân cắm của lối vào SW0-SW6 và dòng 24-37 xác định vị trí chân cắm của lối ra LD0-LD6.
+SW7 và LD7 được cố tình bỏ đi để bạn có thể tìm hiểu cách nhập chúng bằng các phương pháp khác.
+
+### Thực hiện phân tích RTL trên tệp nguồn
+1. Mở rộng *Open elaborated Design* trong *RTL Analysis* của ngăn *Flow Navigator* và chọn **Schematic**.
+2. Bấm **Save**.
+Mô hình (thiết kế) sẽ được xây dựng chi tiết và hiển thị một cách logic.
+3. Bấm vào dấu + bên trong khối để xem nội dung của nó. Sử dụng nút *Zoom Full* (![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/image-20211227164120619.png>) ) để xem toàn bộ thiết kế.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig21.png>)
+Hiển thị logic của thiết kế
+
+### Thêm ràng buộc vào/ra cho LED và các chân công tắc bị thiếu
+1. Sau khi phân tích RTL được thực hiện, một bố cục tiêu chuẩn khác gọi là *I/O Planning* sẽ xuất hiện. Nhấp chọn bố cục *I/O Planning*.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig22.png>)
+
+Lưu ý rằng chế độ xem Package được hiển thị trong khu vực Auxiliary View, tab Device Constraints được chọn và tab cổng vào/ra được hiển thị trong khu vực Console View. 
+Cũng lưu ý rằng các cổng thiết kế (LD* và SW*) được liệt kê trong tab Cổng vào/ra với cả hai cổng đều có nhiều tiêu chuẩn vào/ra.
+
+Di chuyển con trỏ chuột qua chế độ xem Package, đánh dấu các chân khác nhau. Lưu ý số vị trí chân được hiển thị ở cuối GUI Vivado, cùng với loại chân (Người dùng IO, GND, VCCO…) và ngân hàng vào/ra mà nó thuộc về.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig23.png>)
+Bố cục I/O Planning của Boolean 
+
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/z2_IOplanning.png>)
+Bố cục I/O Planning của PYNQ-Z2 
+
+2. Nhấp vào cột *I/O Std* trên hàng **LD7** và chọn *LVCOMS33*. Điều này gán tiêu chuẩn LVCMOS33 cho site.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig24.png>)
+Tiêu chuẩn vào/ra
+
+3. Tương tự, nhấp vào bên dưới cột *Package Pin* trên hàng LD7 để thấy hộp drop-down xuất hiện.
+**Đối với Boolean**: Nhập **E** vào trường để chuyển đến các chân Exx, cuộn xuống cho đến khi bạn thấy E5 , chọn E5 và nhấn phím *Enter* để gán chân.
+**Đối với PYNQ-Z2**: Nhập **M** vào trường để chuyển đến các chân Mxx, cuộn xuống cho đến khi bạn thấy M14 , chọn M14 và nhấn phím *Enter* để gán chân.
+4. Bạn cũng có thể gán các ràng buộc chân bằng lệnh tcl. Nhập lệnh sau vào tab Tcl Console để gán vị trí chân *P2* (Boolean) và tiêu chuẩn vào/ra *LVCSMOS33* cho **SW7**, nhấn phím Enter sau mỗi lệnh.
+**Boolean:**
+``````
+set_property -dict {PACKAGE_PIN P2 IOSTANDARD LVCMOS33} [get_ports {SW7}]
+``````
+**PYNQ-Z2:**
+``````
+set_property -dict {PACKAGE_PIN W9 IOSTANDARD LVCMOS33} [get_ports {SW7}]
+``````
+Quan sát chân và tiêu chuẩn vào/ra trong tab Cổng vào/ra. Bạn cũng có thể chỉ định chân bằng cách chọn lối vào (SW7) trong tab Cổng vào/ra, và kéo nó vào chế độ xem Package và đặt nó ở vị trí P2 (Boolean). Bạn có thể chỉ định tiêu chuẩn LVCMOS33 bằng cách chọn lối vào (SW7), chọn tab Configure của cửa sổ I/O Port Properties, sau đó chọn trường I/O standard là LVCMOS33.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig25.png>)
+Tiêu chuẩn vào/ra trong I/O Port Properties
+
+5. Chọn **File** > **Constraints** > **Save** và chọn OK để lưu các ràng buộc trong tệp **tutorial_boolean.xdc** hoặc **tutorial_z2.xdc**.
+6. Đóng thiết kế nâng cao bằng cách chọn **File** > **Close Elaborated Design**.
+
+## Bước 4: Mô phỏng thiết kế bằng XSim Simulator
+### Thêm file testbench tutorial_tb.v
+1. Chọn **Add Sources** trong *Project Manager* của mục *Flow Navigator*.
+2. Chọn tùy chọn *Add* hoặc *Create Simulation Sources* và chọn Next.
+
+3. Trong biểu mẫu *Add Sources Files*, nhấp vào nút **Add Files…**.
+
+4. Duyệt đến thư mục **{SOURCES}\tutorial** và chọn *tutorial_tb.v* rồi chọn OK.
+
+5. Bấm **Finish**.
+
+6. Chọn tab *Sources* và mở rộng nhóm *Simulation Sources*.
+Tệp tutorial_tb.v được thêm vào trong nhóm *Simulation Sources*, và **system_wrapper_1.v** được tự động đặt vào hệ thống phân cấp của nó dưới dạng một phiên bản tut1.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig26.png>)
+Phân cấp Simulation Sources
+7. Sử dụng Windows Explorer, xác minh rằng thư mục **sim_1** được tạo ở cùng bậc với các thư mục constrs_1 và source_1 trong thư mục tutorial.srcs, và bản sao của tutorial_tb.v được đặt trong **vivao_tutorial.srcs** > **sim_1** > **import** > **tutorial**.
+8. Nhấp chọn **tutorial_tb** trong mục *Sources* để xem nội dung.
+``````
 // The self-checking testbench
 
 `timescale 1ns / 1ps
@@ -567,42 +427,27 @@ module tutorial_tb(
     end
 
 endmodule
+``````
+Testbench xác định kích thước bước mô phỏng và độ phân giải ở dòng 1. Định nghĩa mô-đun testbench bắt đầu ở dòng 5. Dòng 11 khởi tạo DUT (thiết bị/mô-đun đang được thử nghiệm). Các dòng từ 29 đến 38 xác định chức năng mô-đun tương tự để tính toán giá trị mong muốn. Các dòng từ 40 đến 51 xác định việc mô phỏng và so sánh đầu ra mong muốn ​​với những gì DUT cung cấp. Dòng 53 kết thúc testbench. Tác vụ $display sẽ in bản tin trong cửa sổ bảng điều khiển mô phỏng khi chạy mô phỏng.
 
-```
+***Gợi ý:** Lý do kiểm tra kết quả sau 20ns của xung lên clock là vì sẽ có độ trễ truyền trong mỗi cổng logic mà chúng ta sử dụng để xây dựng khối. Bạn cũng có thể nhận thấy rằng độ trễ lan truyền sẽ khác khi mẫu đầu vào thay đổi.
 
-The testbench defines the simulation step size and the resolution in line 1. The testbench module definition begins on line 5. Line 11 instantiates the DUT (device/module under test). Lines 29 through 38 define the same module functionality for the expected value computation. Lines 40 through 51 define the stimuli generation and compares the expected output with what the DUT provides. Line 53 ends the testbench. The $display task will print the message in the simulator console window when the simulation is run.
+### Mô phỏng thiết kế trong 1000 ns bằng XSim Simulator
+1. Chọn **Simulation Settings** bằng cách nhấp chuột phải vào **SIMULATION** trong tác vụ *Project Manager* của ngăn *Flow Navigator*.
+Biểu mẫu **Project Settings** sẽ xuất hiện hiển thị biểu mẫu **Simulation** properties.
+2. Chọn tab **Simulation** và đặt giá trị **Simulation Run Time** thành 200 ns và chọn OK.
+3. Nhấp vào **Run Simulation** > **Run Behavioral Run Time** trong tác vụ *Project Manager* của ngăn *Flow Navigator*.
+Các tệp testbench và tệp nguồn sẽ được biên dịch và trình mô phỏng XSim sẽ được chạy (giả sử không có lỗi). Bạn sẽ thấy đầu ra của trình mô phỏng tương tự như đầu ra được hiển thị dưới đây.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig27.png>)
+Đầu ra mô phỏng
 
-***Hint:** The reason why checking the result after 20ns of the rising edge of the clock is that there will be a propagation delay in every single logic gate we used to build the block. You can also notice that the propagation delay differs when the input pattern changes.
-
-### Simulate the design for 1000 ns using the XSim Simulator
-
-1. Select **Simulation Settings** by right-clicking on the **SIMULATION** under the *Project Manager* tasks of the *Flow Navigator* pane.
-
-   A **Project Settings** form will appear showing the **Simulation** properties form.
-
-2. Select the **Simulation** tab, and set the **Simulation Run Time** value to 200 ns and click **OK**.
-
-3. Click on **Run Simulation > Run Behavioral Simulation** under the *Project Manager* tasks of the *Flow Navigator* pane.
-
-   The testbench and source files will be compiled and the XSim simulator will be run (assuming no errors). You will see a simulator output similar to the one shown below.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig27.png" alt="fig27" style="zoom:67%;" />
-
-Simulator output
-
-   You will see four main views:
-
-(i) *Scopes,* where the testbench hierarchy as well as glbl instances are displayed,
-
-(ii) *Objects,* where top-level signals are displayed,
-
-(iii) the waveform window, and
-
-(iv) *Tcl Console* where the simulation activities are displayed. Notice that since the testbench used is self-checking, the results are displayed as the simulation is run.
-
-Notice that the **tutorial.sim** directory is created under the **tutorial** directory, along with several lower-level directories.
-
-```
+Bạn sẽ thấy 4 điểm chính:
+(i) Phạm vi (*Scopes*): nơi hiển thị hệ thống phân cấp testbench như các phiên bản glbl,
+(ii) Các đối tượng (*Objects*): nơi hiển thị các tín hiệu cấp cao nhất,
+(iii) Cửa sổ hiển thị dạng sóng (Waveform),
+(iv) Bảng điều khiển Tcl (*Tcl Console*) nơi hiển thị các hoạt động mô phỏng. Lưu ý rằng vì testbench được sử dụng có tính chất tự kiểm tra nên kết quả sẽ được hiển thị khi chạy mô phỏng.
+Lưu ý rằng thư mục **tutorial.sim** được tạo trong thư mục **tutorial**, cùng với một số thư mục cấp thấp hơn.
+``````
 // Dictionary structure after running behavioral simulation
 vivado_tutorial.sim
 C:.
@@ -684,98 +529,64 @@ C:.
                         xup_mux_2_to_1.sdb
                         xup_or2.sdb
                         xup_xor2.sdb
-```
+``````
+4. Nhấp vào nút Zoom Fit (![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/image-20211228120655503.png>) ) nằm bên trái cửa sổ dạng sóng để xem toàn bộ dạng sóng.
+Lưu ý rằng đầu ra thay đổi khi đầu vào thay đổi.
+Bạn cũng có thể làm nổi cửa sổ dạng sóng mô phỏng bằng cách nhấp vào nút Float ở phía trên bên phải. Điều này sẽ cho phép bạn có cửa sổ rộng hơn để xem dạng sóng mô phỏng. Để tích hợp lại cửa sổ nổi trở lại GUI, chỉ cần nhấp vào nút Dock Window.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig28.png>)
+Nút Float
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig29.png>)
+Nút Dock Window
 
-4. Click on the *Zoom Fit* button (![image-20211228120655503](img/Vivado_Tutorial_Using_IP_Integrator/image-20211228120655503.png)) located left of the waveform window to see the entire waveform.
+### Thay đổi định dạng hiển thị nếu muốn
+1. Chọn **i[31:0]** trong cửa sổ dạng sóng, nhấp chuột phải, chọn Cơ số (*Radix*), sau đó chọn Số thập phân không dấu (*Unsigned Decimal*) để xem index của vòng lặp for ở dạng *số nguyên*. Tương tự, thay đổi cơ số của **switch[7:0]** thành Hệ thập lục phân (*Hexadecimal*). Để cơ số *leds[7:0]* và *e_led[7:0]* ở dạng nhị phân (*binary*) vì ta muốn xem từng bit đầu ra.
 
-   Notice that the output changes when the input changes.
+### Thêm nhiều tín hiệu hơn để theo dõi các tín hiệu cấp thấp hơn và tiếp tục chạy mô phỏng trong 500 ns
+1. Mở rộng  **tutorial_tb**, nếu cần, trong cửa sổ *Scopes* và chọn **tut1**.
+Tín hiệu SW* (7 đến 0) và LD* (7 đến 0) sẽ được hiển thị trong cửa sổ *Objects*.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig30.png>)
+Lựa chọn các tín hiệu cấp thấp hơn
+2. Chọn **SW*** và **LD*** rồi kéo chúng vào cửa sổ dạng sóng để theo dõi các tín hiệu cấp thấp hơn đó.
+3. Trên thanh cuộn của các nút công cụ mô phỏng, nhập **500** và đảm bảo đơn vị thời gian là **ns** trong cửa sổ thời gian, và chọn trường đơn vị là ns, rồi nhấp vào nút ![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/image-20211228132903373.png>).
+Mô phỏng sẽ chạy thêm 500 ns.
+4. Nhấp vào nút *Zoom Fit* và quan sát đầu ra.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig31.png>)
+Chạy mô phỏng thêm 500 ns
+5. Đóng trình mô phỏng bằng cách chọn **File** > **Đóng Simulation** và loại bỏ các thay đổi.
 
-   You can also float the simulation waveform window by clicking on the Float button on the upper right hand side of the view. This will allow you to have a wider window to view the simulation waveforms. To reintegrate the floating window back into the GUI, simply click on the Dock Window button.
+## Bước 5 Tổng hợp thiết kế
+### Tổng hợp thiết kế bằng công cụ tổng hợp Vivado và phân tích đầu ra Project Summary
+1. Nhấp vào **Run Synthesis** trong tác vụ *Synthesis* của ngăn *Flow Navigator*.
+Quá trình tổng hợp sẽ được chạy trên tệp tutorial.v (và tất cả các tệp phân cấp của nó nếu chúng tồn tại). Khi quá trình hoàn tất, hộp thoại *Synthesis Completed* với ba tùy chọn sẽ được hiển thị.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig28.png" alt="fig13" style="zoom:67%;" />
+2. Chọn tùy chọn *Open Synthesized Design* và chọn OK vì ta muốn xem đầu ra tổng hợp trước khi chuyển sang giai đoạn triển khai.
+Bấm *Yes* để đóng thiết kế phức tạp nếu hộp thoại được hiển thị.
 
-Float Button
+3. Chọn tab **Project Summary** (Chọn bố cục mặc định nếu tab này không hiển thị) và hiểu các cửa sổ khác.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig32.png>)
+Project Summary
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig29.png" alt="fig13" style="zoom:67%;" />
+Nhấp vào các liên kết khác nhau để xem chúng cung cấp thông tin gì và thông tin nào cho phép bạn thay đổi cài đặt tổng hợp.
 
-Dock Window Button
+4. Nhấp vào tab **Table** trong tab **Project Summary**.
+Lưu ý rằng ước tính có khoảng 16 đầu vào ra (8 đầu vào và 8 đầu ra) được sử dụng.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig33.png>)
+Tổng hợp Ước tính sử dụng tài nguyên cho Boolean
+5. Nhấp vào **Schematic** trong *Open Synthesized Design* của *Synthesis* của ngăn *Flow Navigator* để xem thiết kế tổng hợp ở chế độ xem sơ đồ.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig34.png>)
+Sơ đồ của thiết kế tổng hợp
 
-### Change display format if desired
+Lưu ý rằng IBUF và OBUF được tự động khởi tạo (được thêm) vào thiết kế khi đầu vào và đầu ra được lưu vào bộ đệm.
 
-1. Select **i[31:0]** in the waveform window, right-click, select *Radix*, and then select *Unsigned Decimal* to view the for-loop index in *integer* form. Similarly, change the radix of **switches[7:0]** to *Hexadecimal*. Leave the **leds[7:0]** and **e_led[7:0]** radix to *binary* as we want to see each output bit.
+6. Nhấp vào dấu + trong khối *design_1* để xem logic cơ bản.
+7. Nhấp vào dấu + của từng khối cấp thấp hơn để xem cách triển khai của chúng.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig35.png>)
+Logic cấp thấp hơn
 
-### Add more signals to monitor lower-level signals and continue to run the simulation for 500 ns
+Các cổng logic được thực hiện trong LUT (1 đầu vào được liệt kê là LUT1 và 2 đầu vào được liệt kê là LUT2). 5 khối trong đầu ra phân tích RTL được ánh xạ thành 5 LUT trong đầu ra tổng hợp.
 
-1. Expand the **tutorial_tb** instance, if necessary, in the *Scopes* window and select the **tut1** instance.
-
-   The SW* (7 to 0) and LD* (7 to 0) signals will be displayed in the *Objects* window.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig30.png" alt="fig13" style="zoom:67%;" />
-
-Selecting lower-level signals
-
-2. Select **SW\*** and **LD\*** and drag them into the waveform window to monitor those lower-level signals.
-
-3. On the simulator tool buttons ribbon bar, type **500** and make sure the time unit is **ns** in the time window,  click on the drop-down button of the units field and select ns, and click on the (![image-20211228132903373](img/Vivado_Tutorial_Using_IP_Integrator/image-20211228132903373.png)) button.
-
-   The simulation will run for an additional 500 ns.
-
-4. Click on the *Zoom Fit* button and observe the output.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig31.png" alt="fig13" style="zoom:67%;" />
-
-Running simulation for additional 500 ns
-
-5. Close the simulator by selecting **File > Close Simulaton** and discaring changes.
-
-## Step 5 Synthesize the Design
-
-### Synthesize the design with the Vivado synthesis tool and analyze the Project Summary output  
-
-1. Click on **Run Synthesis** under the *Synthesis* tasks of the *Flow Navigator* pane.
-
-   The synthesis process will be run on the tutorial.v file (and all its hierarchical files if they exist). When the process is completed a *Synthesis Completed* dialog box with three options will be displayed.
-
-2. Select the *Open Synthesized Design* option and click **OK** as we want to look at the synthesis output before progressing to the implementation stage.
-
-   Click **Yes** to close the elaborated design if the dialog box is displayed.
-
-3. Select the **Project Summary** tab (Select default layout if the tab is not visible) and understand the various windows.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig32.png" alt="fig13" style="zoom:67%;" />
-
-Project Summary view(Taking Boolean as an example)
-
-Click on the various links to see what information they provide and which allows you to change the synthesis settings.
-
-4. Click on the **Table** tab in the **Project Summary** tab.
-
-   Notice that there are an estimated 16 IOs (8 input and 8 output) that are used.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig33.png" alt="fig13" style="zoom:67%;" />
-
-Resource utilization estimation summary for Boolean
-
-5. Click on **Schematic** under the *Open Synthesized Design* tasks of *Synthesis* tasks of the *Flow Navigator* pane to view the synthesized design in a schematic view.
-
-   <img src="img/Vivado_Tutorial_Using_IP_Integrator/fig34.png" alt="fig13" style="zoom:67%;" />
-
-Synthesized design's schematic view
-
-Notice that IBUF and OBUF are automatically instantiated (added) to the design as the input and output are buffered.
-
-6. Click on the **+** sign within the *design_1* block to see the underlying logic.
-7. Click on the **+** sign of each of the lower-level blocks to see their implementation.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig35.png" alt="fig13" style="zoom:67%;" />
-
-Lower-level logic
-
-The logical gates are implemented in LUTs (1 input is listed as LUT1 and 2 input is listed as LUT2). Five  blocks in RTL analysis output are mapped into five LUTs in the synthesized output.
-
-Using the Windows Explorer, verify that **tutorial.runs** directory is created under **tutorial**. Under the **runs** directory, **synth_1** directory is created which holds several temporary sub-directories.
-
-```
+Sử dụng Windows Explorer, xác minh rằng thư mục **tutorial.runs** được tạo trong *tutorial*. Trong thư mục **runs**, thư mục **synth_1** được tạo để chứa một số thư mục con tạm thời.
+``````
 // Dictionary structure after synthesis the design
 
 vivado_tutorial.runs
@@ -815,140 +626,99 @@ vivado_tutorial.runs
 ├───impl_1
 └───synth_1
     └───.Xil
-```
+``````
 
-## Step 6 Implement the Design
+## Bước 6: Thực hiện thiết kế
+### Thực hiện thiết kế với cài đặt Mặc định của Vivado và phân tích đầu ra Tổng hợp Project
+1. Bấm vào **Run Implementation** trong *Implementation* của ngăn *Flow Navigator*.
+Quá trình thực hiện sẽ được chạy trên các tập tin đầu ra tổng hợp. Khi quá trình hoàn tất, hộp thoại *Implementation Completed* với ba tùy chọn sẽ được hiển thị.
+2. Chọn **Open implemented design** và chọn OK vì chúng tôi muốn xem thiết kế đã thực hiện trong tab Device view.
 
-### Implement the design with the Vivado Implementation Defaults settings and analyze the Project Summary output
+3. Nhấn **Yes** để đóng thiết kế tổng hợp.
+Thiết kế được thực hiện sẽ được mở.
 
-1. Click on **Run Implementation** under the *Implementation* tasks of the *Flow Navigator* pane.
+4. Trong ngăn Netlist, chọn một trong các nets (ví dụ: n_0_design_1_i) và lưu ý rằng tệp net được hiển thị.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig36.png>)
+Lựa chọn net
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig37.png>)
+Thiết kế đã thực hiện
 
-   The implementation process will be run on the synthesis output files. When the process is completed an *Implementation Completed* dialog box with three options will be displayed.
+5. Đóng xem thiết kế đã thực hiện và chọn tab **Project Summary** (bạn có thể phải thay đổi sang xem Default Layout) và quan sát kết quả.
 
-2. Select **Open implemented design** and click **OK** as we want to look at the implemented design in a Device view tab.
+Lưu ý rằng mức sử dụng tài nguyên thực tế là 15 LUT và 16 đầu vào ra. Ngoài ra, nó chỉ ra rằng không có ràng buộc về thời gian nào được xác định cho thiết kế này (vì thiết kế này là tổ hợp). Chọn các tab **Post-implementation** trong cửa sổ *Timing* và *Utilization*.
 
-3. Click **Yes** to close the synthesized design.
+6. Sử dụng Windows Explorer, xác minh rằng thư mục **impl_1** được tạo ở cùng cấp độ với **synth_1** trong thư mục **tutorial.runs**. Thư mục **impl_1** chứa một số tệp bao gồm các tệp báo cáo.
 
-   The implemented design will be opened.
+7. Chọn tab **Reports** và nhấp đúp vào mục *Utilization Report* trong phần *Place Design*. Báo cáo sẽ được hiển thị trong khung xem phụ hiển thị việc sử dụng tài nguyên. Lưu ý rằng vì thiết kế là tổ hợp nên không sử dụng thanh ghi nào.
 
-4. In the *Netlist* pane, select one of the nets (e.g. n_0_design_1_i) and notice that the displayed net.
+## Bước 7: Thực hiện mô phỏng thời gian
+### Chạy mô phỏng thời gian
+1. Chọn **Run Simulation** > **Run Post-Implementation Timing Simulation** trong tác vụ *Simulation* của ngăn *Flow Navigator*.
+Trình mô phỏng XSim sẽ được khởi chạy bằng cách sử dụng thiết kế đã thiết kế và **tutorial_tb** làm mô-đun cấp cao nhất.
+Sử dụng Windows Explorer, xác minh rằng thư mục **timing** được tạo trong thư mục **tutorial.sim** > **sim_1** > **impl**. Thư mục **thời gian** chứa các tệp được tạo để chạy mô phỏng thời gian.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig36.png" alt="fig13" style="zoom:67%;" />
+2. Nhấp vào nút **Zoom Fit** để xem cửa sổ dạng sóng từ 0 đến 200 ns.
 
-Selecting a net
+3. Nhấp chuột phải ở 120 ns (nơi công tắc đầu vào được đặt thành 00000010 [thập phân 2]) và chọn **Markers** > **Add Marker**.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig37.png" alt="fig13" style="zoom:67%;" />
+4. Tương tự, nhấp chuột phải và thêm 1 marker ở khoảng 120.000 ns nơi đèn **led** thay đổi.
 
-Viewing implemented design
+5. Bạn cũng có thể thêm 1 marker bằng cách nhấp vào nút Add Marker (![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/image-20211229114109951.png>)). Nhấp vào nút **Add Marker** và nhấp chuột trái vào khoảng 60 ns nơi **e_led** thay đổi.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig38.png>)
+Đầu ra mô phỏng thời gian
 
-5. Close the implemented design view and select the **Project Summary** tab (you may have to change to the Default Layout view) and observe the results.
+Lưu ý rằng ta đã giám sát đầu ra led dự kiến ​​ở 20 ns sau khi thay đổi đầu vào (xem testbench) trong khi độ trễ thực tế là khoảng 22.000 ns. Lỗi không khớp sẽ xuất hiện trong cửa sổ điều khiển.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig38_console_output.png>)
+Đầu ra của bảng điều khiển mô phỏng thời gian
 
-   Notice that the actual resource utilization is 15 LUTs and 16 IOs. Also, it indicates that no timing constraints were defined for this design (since the design is combinatorial). Select the **Post-implementation** tabs under the *Timing* and *Utilization* windows.
+6. Đóng trình mô phỏng bằng cách chọn **File** > **Close Simulation** mà không lưu bất kỳ thay đổi nào.
 
-6. Using the Windows Explorer, verify that **impl_1** directory is created at the same level as **synth_1** under the **tutorial.runs** directory. The **impl_1** directory contains several files including the report files.
+## Bước 8: Tạo chuỗi bit và xác minh chức năng
+### Kết nối bo mạch và BẬT nguồn. Tạo chuỗi bit, mở phiên phần cứng và lập trình FPGA
+1. Nhấp vào mục **Generate Bitstream** trong tác vụ *Program and Debug* của ngăn *Flow Navigator*.
+Quá trình tạo chuỗi bit sẽ được chạy trên thiết kế đã triển khai. Khi quá trình hoàn tất, hộp thoại *Bitstream Generation Completed* với ba tùy chọn sẽ được hiển thị.
+Quá trình này sẽ có tệp **design_1_wrapper.bit** được tạo trong thư mục **impl_1** được tạo trong thư mục **tutorial.runs**.
+2. Đảm bảo rằng nguồn điện được chuyển sang USB và cáp Micro-USB được cung cấp được kết nối giữa bo mạch và PC.
 
-7. Select the **Reports** tab, and double-click on the *Utilization Report* entry under the *Place Design* section. The report will be displayed in the auxiliary view pane showing resources utilization. Note that since the design is combinatorial no registers are used.
+Lưu ý rằng bạn không cần kết nối giắc cắm nguồn và bo mạch có thể được cấp nguồn và chỉ cấu hình qua USB.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig39.png>)
+Cài đặt bo mạch cho Boolean
 
-## Step 7 Perform Timing Simulation
+Đối với PYNQ-Z2, đảm bảo rằng jumper được thiết lập **USB**(mũi tên trái) và **JTAG**(mũi tên phải)
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/z2_setup.png>)
 
-### Run a timing simulation
+3. BẬT nguồn công tắc trên bo mạch.
 
-1. Select **Run Simulation > Run Post-Implementation Timing Simulation** process under the *Simulation* tasks of the *Flow Navigator* pane.
+4. Chọn tùy chọn *Open Hardware Manager* và chọn OK.
+Cửa sổ Hardware Session sẽ mở ra cho biết trạng thái “không được kết nối”.
 
-   The XSim simulator will be launched using the implemented design and the **tutorial_tb** as the top-level module.
+5. Nhấp vào liên kết **Open target** hoặc nút **Auto connect**.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig40.png>)
+Kết nối với phần cứng mới
 
-   Using the Windows Explorer, verify that **timing** directory is created under the **tutorial.sim > sim_1 > impl** directory. The **timing** directory contains generated files to run the timing simulation.
+6. Trạng thái Hardware Session thay đổi từ Chưa kết nối thành tên máy chủ và thiết bị được đánh dấu. Lưu ý rằng Trạng thái cho biết rằng nó không được lập trình.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig41.png>)
+Hardware session cho Boolean
 
-2. Click on the **Zoom Fit** button to see the waveform window from 0 to 200 ns.
+7. Chọn thiết bị và xác minh rằng **design_1_wrapper.bit** được chọn làm tệp lập trình trong tab General.
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/fig42.png>)
+Tệp lập trình cho Boolean
+![Alt text](<img/Vivado_Tutorial_Using_IP_Integrator/image-20220119153223811.png>)
+Tệp lập trình cho PYNQ-Z2
 
-3. Right-click at 120 ns (where the switch input is set to 00000010 [decimal 2]) and select **Markers > Add Marker**.
+8. Bấm vào **Program** để lập trình FPGA với chuỗi bit đã chọn.
+Đèn DONE sẽ sáng khi thiết bị được lập trình. Bạn có thể thấy một số đèn LED sáng tùy thuộc vào vị trí của công tắc.
 
-4. Similarly, right-click and add a marker at around 120.000 ns where the **leds** changes.
+9. Xác minh chức năng bằng cách bật công tắc và quan sát đầu ra trên đèn LED.
 
-5. You can also add a marker by clicking on the Add Marker button (![image-20211229114109951](img/Vivado_Tutorial_Using_IP_Integrator/image-20211229114109951.png)). Click on the **Add Marker** button and left-click at around 60 ns where **e_led** changes.
+10. Đóng hardware session bằng cách chọn **File** > **Close Hardware Manager**.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig38.png" alt="fig13" style="zoom:67%;" />
+11. Nhấn OK để đóng phiên.
 
-Timing simulation output
+12. **TẮT** nguồn bảng.
 
-Notice that we monitored the expected led output at 20 ns after the input is changed (see the testbench) whereas the actual delay is about 22.000 ns. A mismatch error will appear in the console window.
+13. Đóng chương trình **Vivado** bằng cách chọn **File** > **Exit** và bấm OK.
 
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig38_console_output.png" alt="fig13" style="zoom:67%;" />
-
-Timing simulation console output
-
-6. Close the simulator by selecting **File > Close Simulation** without saving any changes.
-
-## Step 8 Generate the Bitstream and Verify Functionality
-
-### Connect the board and power it ON. Generate the bitstream, open a hardware session, and program the FPGA  
-
-1. Click on the **Generate Bitstream** entry under the *Program and Debug* tasks of the *Flow Navigator* pane.
-
-   The bitstream generation process will be run on the implemented design. When the process is completed a *Bitstream Generation* *Completed* dialog box with three options will be displayed.
-
-   This process will have **design_1_wrapper.bit** file generated under **impl_1** directory which was generated under the **tutorial.runs** directory.
-
-2. Make sure that the power supply source is jumper to *USB* and the provided Micro-USB cable is connected between the board and the PC.
-
-   Note that you do not need to connect the power jack and the board can be powered and configured via USB alone
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig39.png" alt="fig13" style="zoom:67%;" />
-
- Board settings for Boolean
-
-For PYNQ-Z2, make sure that the jumper is set up **USB**(the left arrow) and **JTAG**(the right arrow)
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/z2_setup.png" alt="fig13" style="zoom:67%;" />
-
-3. Power **ON** the switch on the board.
-
-4. Select the *Open Hardware Manager* option and click **OK**.
-
-   The Hardware Session window will open indicating “unconnected” status.
-
-5. Click on the **Open target** link or the **Auto connect** button.
-
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig40.png" alt="fig13" style="zoom:67%;" />
-
-Opening and connecting to a new hardware target
-
-6. The Hardware Session status changes from Unconnected to the server name and the device is highlighted. Also notice that the Status indicates that it is not programmed.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig41.png" alt="fig13" style="zoom:67%;" />
-
-Opened hardware session for Boolean
-
-7. Select the device and verify that the **design_1_wrapper.bit** is selected as the programming file in the General tab.
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/fig42.png" alt="fig13" style="zoom:67%;" />
-
-Programming file for Boolean
-
-<img src="img/Vivado_Tutorial_Using_IP_Integrator/image-20220119153223811.png" alt="image-20220119153223811" style="zoom:67%;" />
-
-Programming file for PYNQ-Z2
-
-8. Click **Program** to program the FPGA with the selected bitstream.
-
-   The DONE light will lit when the device is programmed. You may see some LEDs lit depending on the switches position.
-
-9. Verify the functionality by flipping switches and observing the output on the LEDs.
-
-10. Close the hardware session by selecting **File > Close Hardware Manager.**
-
-11. Click **OK** to close the session.
-
-12. Power **OFF** the board.
-
-13. Close the **Vivado** program by selecting **File > Exit** and click **OK**.
-
-## Conclusion
-
-The Vivado software tool can be used to perform a complete design flow. The project was created using the XUP IP library (IPI blocks and user constraint file). A behavioral simulation was done to verify the model functionality. The model was then synthesized, implemented, and a bitstream was generated. The timing simulation was run on the implemented design using the same testbench. The functionality was verified in hardware using the generated bitstream.
-
-
-
-------------------------------------------------------
-<p align="center">Copyright&copy; 2022, Advanced Micro Devices, Inc.</p>
+## Kết luận
+Công cụ phần mềm Vivado có thể được sử dụng để thực hiện quy trình thiết kế hoàn chỉnh. 
+Dự án được tạo bằng thư viện XUP IP (khối IPI và tệp ràng buộc của người dùng). Một mô phỏng hành vi đã được thực hiện để xác minh chức năng của mô hình. Sau đó, mô hình này được tổng hợp, triển khai và tạo ra chuỗi bit. Mô phỏng thời gian được chạy trên thiết kế đã triển khai bằng cách sử dụng cùng một testbench. Chức năng đã được xác minh trong phần cứng bằng cách sử dụng chuỗi bit được tạo.
